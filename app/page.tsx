@@ -1,828 +1,257 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-
-import ReactMarkdown from "react-markdown";
-
-import {
-  Prism as SyntaxHighlighter,
-} from "react-syntax-highlighter";
-
-import { vscDarkPlus }
-from "react-syntax-highlighter/dist/esm/styles/prism";
-
-import {
-  motion,
-  AnimatePresence,
-} from "framer-motion";
-
-import {
-  Trash2,
-  Paperclip,
-} from "lucide-react";
-
-import Particles
-from "react-tsparticles";
-
-import { loadFull }
-from "tsparticles";
+import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { Bot, User, Send, Sparkles } from "lucide-react";
 
 type Message = {
   role: "user" | "assistant";
   content: string;
 };
 
-type Chat = {
-  id: number;
-  title: string;
-  messages: Message[];
-};
-
 export default function Home() {
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: "assistant",
+      content:
+        "👋 Hello. I am MAVRYAN.\nYour futuristic AI assistant is now online.",
+    },
+  ]);
 
-  const [chats, setChats] =
-    useState<Chat[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const [currentChatId,
-    setCurrentChatId] =
-    useState<number | null>(null);
+  const chatRef = useRef<HTMLDivElement>(null);
 
-  const [input, setInput] =
-    useState("");
-
-  const [loading, setLoading] =
-    useState(false);
-
-  const [uploadedText,
-    setUploadedText] =
-    useState("");
-
-  const [uploadedFileName,
-    setUploadedFileName] =
-    useState("");
-
-  const bottomRef =
-    useRef<HTMLDivElement>(null);
-
-  // PARTICLES
-  const particlesInit =
-    async (engine: any) => {
-
-      await loadFull(engine);
-    };
-
-  // LOAD CHATS
   useEffect(() => {
-
-    const savedChats =
-      localStorage.getItem(
-        "mavryan-chats"
-      );
-
-    if (savedChats) {
-
-      const parsed =
-        JSON.parse(savedChats);
-
-      setChats(parsed);
-
-      if (parsed.length > 0) {
-
-        setCurrentChatId(
-          parsed[0].id
-        );
-      }
-
-    } else {
-
-      createNewChat();
-    }
-
-  }, []);
-
-  // SAVE CHATS
-  useEffect(() => {
-
-    localStorage.setItem(
-      "mavryan-chats",
-      JSON.stringify(chats)
-    );
-
-  }, [chats]);
-
-  // AUTO SCROLL
-  useEffect(() => {
-
-    bottomRef.current?.scrollIntoView({
+    chatRef.current?.scrollTo({
+      top: chatRef.current.scrollHeight,
       behavior: "smooth",
     });
-
-  }, [chats, loading]);
-
-  function createNewChat() {
-
-    const newChat: Chat = {
-
-      id: Date.now(),
-
-      title: "New Chat",
-
-      messages: [
-        {
-          role: "assistant",
-
-          content:
-            "# Hello 👋\nI am **MAVRYAN**, your futuristic AI assistant.",
-        },
-      ],
-    };
-
-    setChats((prev) => [
-      newChat,
-      ...prev,
-    ]);
-
-    setCurrentChatId(
-      newChat.id
-    );
-
-    setUploadedText("");
-    setUploadedFileName("");
-  }
-
-  function deleteChat(
-    chatId: number
-  ) {
-
-    const updatedChats =
-      chats.filter(
-        (chat) =>
-          chat.id !== chatId
-      );
-
-    setChats(updatedChats);
-
-    if (
-      currentChatId === chatId
-    ) {
-
-      if (
-        updatedChats.length > 0
-      ) {
-
-        setCurrentChatId(
-          updatedChats[0].id
-        );
-
-      } else {
-
-        createNewChat();
-      }
-    }
-  }
-
-  async function handleFileUpload(
-    e: React.ChangeEvent<HTMLInputElement>
-  ) {
-
-    const file =
-      e.target.files?.[0];
-
-    if (!file) return;
-
-    const formData =
-      new FormData();
-
-    formData.append(
-      "file",
-      file
-    );
-
-    try {
-
-      const response =
-        await fetch(
-          "/api/upload",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-      const data =
-        await response.json();
-
-      setUploadedText(
-        data.text
-      );
-
-      setUploadedFileName(
-        file.name
-      );
-
-    } catch (error) {
-
-      console.error(error);
-    }
-  }
-
-  const currentChat =
-    chats.find(
-      (chat) =>
-        chat.id ===
-        currentChatId
-    );
+  }, [messages]);
 
   async function sendMessage() {
-
-    if (
-      !input.trim() ||
-      !currentChat
-    ) return;
+    if (!input.trim()) return;
 
     const userMessage: Message = {
-
       role: "user",
-
-      content:
-        uploadedText
-          ? `File Content:\n${uploadedText}\n\nUser Question:\n${input}`
-          : input,
+      content: input,
     };
 
-    const updatedMessages = [
-      ...currentChat.messages,
-      userMessage,
-    ];
+    const updatedMessages = [...messages, userMessage];
 
-    const updatedChats =
-      chats.map((chat) =>
-        chat.id ===
-        currentChatId
-          ? {
-              ...chat,
-
-              messages:
-                updatedMessages,
-
-              title:
-                chat.title ===
-                "New Chat"
-                  ? input.slice(
-                      0,
-                      20
-                    )
-                  : chat.title,
-            }
-          : chat
-      );
-
-    setChats(updatedChats);
-
+    setMessages(updatedMessages);
     setInput("");
     setLoading(true);
 
     try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: updatedMessages,
+        }),
+      });
 
-      const response =
-        await fetch(
-          "/api/chat",
-          {
-            method: "POST",
+      const data = await response.json();
 
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
+      const aiMessage: Message = {
+        role: "assistant",
+        content: data.reply,
+      };
 
-            body: JSON.stringify({
-              messages:
-                updatedMessages,
-            }),
-          }
-        );
-
-      const reader =
-        response.body?.getReader();
-
-      if (!reader) return;
-
-      let assistantText = "";
-
-      while (true) {
-
-        const {
-          done,
-          value,
-        } = await reader.read();
-
-        if (done) break;
-
-        const chunk =
-          new TextDecoder()
-            .decode(value);
-
-        assistantText += chunk;
-
-        setChats(
-          (prevChats) =>
-            prevChats.map(
-              (chat) =>
-                chat.id ===
-                currentChatId
-                  ? {
-                      ...chat,
-
-                      messages: [
-                        ...updatedMessages,
-
-                        {
-                          role:
-                            "assistant",
-
-                          content:
-                            assistantText,
-                        },
-                      ],
-                    }
-                  : chat
-            )
-        );
-      }
-
+      setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
-
-      console.error(error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "⚠️ MAVRYAN encountered an error.",
+        },
+      ]);
     }
 
     setLoading(false);
   }
 
   return (
-
-    <main className="flex h-screen bg-black text-white overflow-hidden relative">
-
-      {/* PARTICLES */}
-      <Particles
-        id="tsparticles"
-        init={particlesInit}
-
-        options={{
-
-          fullScreen: {
-            enable: false,
-          },
-
-          background: {
-            color: {
-              value: "#000000",
-            },
-          },
-
-          fpsLimit: 120,
-
-          particles: {
-
-            color: {
-              value: "#ffffff",
-            },
-
-            links: {
-              color: "#ffffff",
-              distance: 150,
-              enable: true,
-              opacity: 0.08,
-              width: 1,
-            },
-
-            move: {
-              direction: "none",
-              enable: true,
-
-              outModes: {
-                default: "bounce",
-              },
-
-              random: false,
-              speed: 1,
-              straight: false,
-            },
-
-            number: {
-              density: {
-                enable: true,
-              },
-
-              value: 55,
-            },
-
-            opacity: {
-              value: 0.08,
-            },
-
-            shape: {
-              type: "circle",
-            },
-
-            size: {
-              value: {
-                min: 1,
-                max: 3,
-              },
-            },
-          },
-
-          detectRetina: true,
-        }}
-
-        className="absolute inset-0 z-0"
-      />
-
-      {/* GLOW */}
-      <motion.div
-        animate={{
-          scale: [1, 1.2, 1],
-
-          opacity: [
-            0.12,
-            0.25,
-            0.12,
-          ],
-        }}
-
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-        }}
-
-        className="absolute top-1/2 left-1/2 w-[800px] h-[800px] bg-white rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 opacity-10 pointer-events-none"
-      />
+    <main className="h-screen w-screen bg-black text-white overflow-hidden flex">
 
       {/* SIDEBAR */}
-      <div className="w-72 border-r border-zinc-800 bg-zinc-950/60 backdrop-blur-2xl p-5 flex flex-col z-10">
+      <div className="w-[260px] border-r border-white/10 bg-black/40 backdrop-blur-xl p-5 flex flex-col">
 
         <motion.h1
-          initial={{
-            opacity: 0,
-            y: -20,
-          }}
-
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-
-          className="text-4xl font-black tracking-widest mb-8"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-4xl font-bold tracking-wider mb-10"
         >
           MAVRYAN
         </motion.h1>
 
-        <motion.button
-
-          whileHover={{
-            scale: 1.03,
-          }}
-
-          whileTap={{
-            scale: 0.96,
-          }}
-
-          onClick={
-            createNewChat
-          }
-
-          className="bg-white text-black rounded-2xl py-3 px-4 font-bold shadow-2xl"
-        >
+        <button className="bg-white text-black rounded-xl py-3 font-semibold hover:scale-105 transition mb-8">
           + New Chat
-        </motion.button>
+        </button>
 
-        {/* CHAT LIST */}
-        <div className="mt-8 space-y-3 overflow-y-auto">
+        <div className="space-y-4 text-zinc-400">
+          <div className="hover:text-white transition cursor-pointer">
+            ⚡ AI Assistant
+          </div>
 
-          {chats.map((chat) => (
+          <div className="hover:text-white transition cursor-pointer">
+            💻 Coding Help
+          </div>
 
-            <motion.div
+          <div className="hover:text-white transition cursor-pointer">
+            🚀 Research Agent
+          </div>
 
-              whileHover={{
-                scale: 1.02,
-              }}
-
-              key={chat.id}
-
-              className={`group flex items-center justify-between p-3 rounded-xl cursor-pointer transition border ${
-                currentChatId ===
-                chat.id
-                  ? "bg-white text-black border-white"
-                  : "bg-zinc-900/40 border-zinc-800 hover:bg-zinc-800"
-              }`}
-            >
-
-              <div
-                className="flex-1 truncate"
-
-                onClick={() =>
-                  setCurrentChatId(
-                    chat.id
-                  )
-                }
-              >
-                {chat.title}
-              </div>
-
-              <button
-                onClick={() =>
-                  deleteChat(
-                    chat.id
-                  )
-                }
-
-                className="opacity-0 group-hover:opacity-100 transition"
-              >
-                <Trash2
-                  size={16}
-                />
-              </button>
-
-            </motion.div>
-
-          ))}
-
+          <div className="hover:text-white transition cursor-pointer">
+            📄 PDF Analyzer
+          </div>
         </div>
 
+        <div className="mt-auto text-zinc-600 text-sm">
+          MAVRYAN OS v1.0
+        </div>
       </div>
 
       {/* MAIN */}
-      <div className="flex-1 flex flex-col relative z-10">
+      <div className="flex-1 relative overflow-hidden bg-black">
 
-        {/* HEADER */}
-        <div className="border-b border-zinc-800 bg-black/30 backdrop-blur-2xl p-5 text-xl font-bold">
-          MAVRYAN AI
+        {/* BACKGROUND GLOW */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute w-[500px] h-[500px] bg-white/5 blur-3xl rounded-full top-[-100px] left-[30%]" />
+
+          <div className="absolute w-[300px] h-[300px] bg-blue-500/10 blur-3xl rounded-full bottom-[-100px] right-[10%]" />
         </div>
 
-        {/* MESSAGES */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8">
+        {/* HEADER */}
+        <div className="relative z-10 border-b border-white/10 px-8 py-5 backdrop-blur-xl">
+          <div className="flex items-center gap-3">
+            <Sparkles className="text-white" />
+            <h1 className="text-2xl font-bold tracking-wide">
+              MAVRYAN AI
+            </h1>
+          </div>
+        </div>
 
-          <AnimatePresence>
+        {/* CHAT AREA */}
+        <div
+          ref={chatRef}
+          className="relative z-10 h-[calc(100vh-170px)] overflow-y-auto px-8 py-8 space-y-8"
+        >
+          {messages.map((msg, index) => (
+            <motion.div
+              key={index}
+              initial={{
+                opacity: 0,
+                y: 20,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                duration: 0.3,
+              }}
+              className={`flex ${
+                msg.role === "user"
+                  ? "justify-end"
+                  : "justify-start"
+              }`}
+            >
+              <div
+                className={`max-w-[70%] rounded-3xl px-6 py-5 border backdrop-blur-xl shadow-2xl ${
+                  msg.role === "user"
+                    ? "bg-white text-black border-white/20"
+                    : "bg-white/5 border-white/10 text-white"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  {msg.role === "assistant" ? (
+                    <Bot size={18} />
+                  ) : (
+                    <User size={18} />
+                  )}
 
-            {currentChat?.messages.map(
-              (
-                message,
-                index
-              ) => (
+                  <span className="text-sm opacity-70">
+                    {msg.role === "assistant"
+                      ? "MAVRYAN"
+                      : "You"}
+                  </span>
+                </div>
 
-                <motion.div
-
-                  key={index}
-
-                  initial={{
-                    opacity: 0,
-                    y: 20,
-                  }}
-
-                  animate={{
-                    opacity: 1,
-                    y: 0,
-                  }}
-
-                  transition={{
-                    duration: 0.3,
-                  }}
-
-                  className={`flex ${
-                    message.role ===
-                    "user"
-                      ? "justify-end"
-                      : "justify-start"
-                  }`}
-                >
-
-                  <div
-                    className={`rounded-3xl px-6 py-5 max-w-3xl shadow-2xl ${
-                      message.role ===
-                      "user"
-                        ? "bg-white text-black"
-                        : "bg-zinc-900/60 border border-zinc-800 backdrop-blur-2xl"
-                    }`}
-                  >
-
-                    <ReactMarkdown
-                      components={{
-                        code(props) {
-
-                          const {
-                            children,
-                          } = props;
-
-                          return (
-
-                            <SyntaxHighlighter
-                              style={
-                                vscDarkPlus
-                              }
-
-                              language="javascript"
-
-                              PreTag="div"
-                            >
-                              {String(
-                                children
-                              ).replace(
-                                /\n$/,
-                                ""
-                              )}
-                            </SyntaxHighlighter>
-
-                          );
-                        },
-                      }}
-                    >
-                      {
-                        message.content
-                      }
-                    </ReactMarkdown>
-
-                  </div>
-
-                </motion.div>
-              )
-            )}
-
-          </AnimatePresence>
-
-          {/* LOADING */}
-          {loading && (
-
-            <div className="flex justify-start">
-
-              <div className="bg-zinc-900/60 border border-zinc-800 px-6 py-4 rounded-3xl flex items-center gap-2 backdrop-blur-xl">
-
-                <motion.div
-                  animate={{
-                    y: [
-                      0,
-                      -5,
-                      0,
-                    ],
-                  }}
-
-                  transition={{
-                    repeat:
-                      Infinity,
-
-                    duration:
-                      0.6,
-                  }}
-
-                  className="w-2 h-2 bg-white rounded-full"
-                />
-
-                <motion.div
-                  animate={{
-                    y: [
-                      0,
-                      -5,
-                      0,
-                    ],
-                  }}
-
-                  transition={{
-                    repeat:
-                      Infinity,
-
-                    duration:
-                      0.6,
-
-                    delay: 0.2,
-                  }}
-
-                  className="w-2 h-2 bg-white rounded-full"
-                />
-
-                <motion.div
-                  animate={{
-                    y: [
-                      0,
-                      -5,
-                      0,
-                    ],
-                  }}
-
-                  transition={{
-                    repeat:
-                      Infinity,
-
-                    duration:
-                      0.6,
-
-                    delay: 0.4,
-                  }}
-
-                  className="w-2 h-2 bg-white rounded-full"
-                />
-
+                <div className="whitespace-pre-wrap leading-8 text-[17px]">
+                  {msg.content}
+                </div>
               </div>
+            </motion.div>
+          ))}
 
-            </div>
+          {loading && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex justify-start"
+            >
+              <div className="bg-white/5 border border-white/10 rounded-3xl px-6 py-5 backdrop-blur-xl">
+                <div className="flex gap-2 items-center">
+                  <Bot size={18} />
 
+                  <span>MAVRYAN is thinking</span>
+
+                  <motion.div
+                    animate={{
+                      opacity: [0.3, 1, 0.3],
+                    }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 1,
+                    }}
+                    className="flex gap-1"
+                  >
+                    <div>.</div>
+                    <div>.</div>
+                    <div>.</div>
+                  </motion.div>
+                </div>
+              </div>
+            </motion.div>
           )}
-
-          <div ref={bottomRef} />
-
         </div>
 
         {/* INPUT */}
-        <div className="border-t border-zinc-800 bg-black/40 backdrop-blur-2xl p-5">
+        <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-white/10 bg-black/40 backdrop-blur-xl px-8 py-5">
+          <div className="flex items-center gap-4">
 
-          <div className="flex items-center bg-zinc-900/50 border border-zinc-800 rounded-2xl px-5 py-4 shadow-2xl">
-
-            {/* UPLOAD */}
-            <label className="mr-4 cursor-pointer text-zinc-400 hover:text-white transition">
-
-              <Paperclip />
-
-              <input
-                type="file"
-                className="hidden"
-                accept=".txt"
-                onChange={
-                  handleFileUpload
-                }
-              />
-
-            </label>
-
-            <input
-              type="text"
-
-              placeholder=
-                "Message MAVRYAN..."
-
+            <textarea
               value={input}
-
-              onChange={(e) =>
-                setInput(
-                  e.target.value
-                )
-              }
-
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Message MAVRYAN..."
+              rows={1}
+              className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-4 outline-none resize-none text-white placeholder:text-zinc-500 focus:border-white/30 transition"
               onKeyDown={(e) => {
-
-                if (
-                  e.key ===
-                  "Enter"
-                ) {
-
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
                   sendMessage();
                 }
               }}
-
-              className="flex-1 bg-transparent outline-none text-white placeholder:text-zinc-500 text-lg"
             />
 
             <motion.button
-
-              whileHover={{
-                scale: 1.05,
-              }}
-
-              whileTap={{
-                scale: 0.95,
-              }}
-
-              onClick={
-                sendMessage
-              }
-
-              className="ml-4 bg-white text-black px-5 py-2 rounded-xl font-bold"
+              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05 }}
+              onClick={sendMessage}
+              className="bg-white text-black p-4 rounded-2xl font-bold"
             >
-              Send
+              <Send />
             </motion.button>
 
           </div>
-
-          {/* FILE NAME */}
-          {uploadedFileName && (
-
-            <div className="mt-3 text-sm text-zinc-400">
-
-              Uploaded:
-
-              <span className="text-white ml-2">
-                {uploadedFileName}
-              </span>
-
-            </div>
-
-          )}
-
         </div>
-
       </div>
-
     </main>
   );
 }
