@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Palette, Globe, Settings, Trash2, Search } from "lucide-react";
+import { Plus, Palette, Globe, Settings, Trash2, Search, Download } from "lucide-react";
 
 type CommandPaletteProps = {
   isOpen: boolean;
@@ -10,6 +10,7 @@ type CommandPaletteProps = {
   onToggleWebSearch: () => void;
   onOpenSettings: () => void;
   onClearChats: () => void;
+  onExportChat: () => void;
   theme: "dark" | "light";
   webSearch: boolean;
 };
@@ -22,6 +23,7 @@ export default function CommandPalette({
   onToggleWebSearch,
   onOpenSettings,
   onClearChats,
+  onExportChat,
   theme,
   webSearch,
 }: CommandPaletteProps) {
@@ -59,6 +61,16 @@ export default function CommandPalette({
               <Plus size={16} />
             </div>
             <span className="text-[14px] font-medium text-white/70 group-hover:text-white/90 transition-colors">New Chat</span>
+          </button>
+
+          <button
+            onClick={() => { onExportChat(); onClose(); }}
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/[0.04] transition-all text-left group"
+          >
+            <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center text-white/60 group-hover:text-white group-hover:bg-white/10 transition-colors shadow-sm">
+              <Download size={16} />
+            </div>
+            <span className="text-[14px] font-medium text-white/70 group-hover:text-white/90 transition-colors">Export Chat</span>
           </button>
 
           <button

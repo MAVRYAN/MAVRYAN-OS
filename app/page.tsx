@@ -665,6 +665,34 @@ export default function Home() {
     );
   }
 
+  function exportActiveChat() {
+    if (!activeConversation || activeConversation.messages.length === 0) return;
+
+    let content = `# ${activeConversation.title}\n\n`;
+
+    activeConversation.messages.forEach((msg) => {
+      const role = msg.role === "assistant" ? "MAVRYAN" : "You";
+      content += `### ${role}\n${msg.content.replace("▋", "")}\n\n`;
+      if (msg.sources && msg.sources.length > 0) {
+        content += `**Sources:**\n`;
+        msg.sources.forEach((src) => {
+          content += `- ${src.title}\n`;
+        });
+        content += `\n`;
+      }
+    });
+
+    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${activeConversation.title.replace(/[^a-z0-9]/gi, "_").toLowerCase() || "chat_export"}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <main className={`flex h-screen bg-[#0a0a0a] text-white overflow-hidden ${theme === "light" ? "invert hue-rotate-180" : ""}`}>
       {/* SIDEBAR */}
@@ -781,6 +809,7 @@ export default function Home() {
         onToggleWebSearch={() => setWebSearch(!webSearch)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onClearChats={clearAllChats}
+        onExportChat={exportActiveChat}
         theme={theme}
         webSearch={webSearch}
       />
