@@ -17,6 +17,7 @@ import {
   MessageSquare,
   Edit3,
   Settings,
+  Pin,
 } from "lucide-react";
 
 type Message = {
@@ -33,6 +34,7 @@ type Conversation = {
   id: string;
   title: string;
   messages: Message[];
+  pinned?: boolean;
 };
 
 type SidebarProps = {
@@ -56,6 +58,7 @@ type SidebarProps = {
     currentTitle: string
   ) => void;
   deleteConversation: (id: string) => void;
+  togglePin: (id: string) => void;
   renameInputRef: RefObject<HTMLInputElement | null>;
   onOpenSettings: () => void;
 };
@@ -72,6 +75,7 @@ export default function Sidebar({
   saveRename,
   startRename,
   deleteConversation,
+  togglePin,
   renameInputRef,
   onOpenSettings,
 }: SidebarProps) {
@@ -93,6 +97,10 @@ export default function Sidebar({
   const filteredConversations = conversations.filter((conversation) =>
     conversation.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const pinnedChats = filteredConversations.filter((c) => c.pinned);
+  const unpinnedChats = filteredConversations.filter((c) => !c.pinned);
+  const sortedConversations = [...pinnedChats, ...unpinnedChats];
 
   return (
     <aside className="w-[280px] border-r border-white/5 bg-[#080808] flex flex-col">
@@ -143,7 +151,7 @@ export default function Sidebar({
       {/* CHATS */}
 
       <div className="mt-6 flex-1 overflow-y-auto px-3 space-y-2">
-        {filteredConversations.length === 0 ? (
+        {sortedConversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 px-4 text-center transition-all duration-300">
             <div className="h-12 w-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center mb-3 shadow-[0_0_20px_rgba(255,255,255,0.02)]">
               <Search size={18} className="text-white/40" />
@@ -156,7 +164,7 @@ export default function Sidebar({
             </p>
           </div>
         ) : (
-          filteredConversations.map((conversation) => (
+          sortedConversations.map((conversation) => (
             <div
               key={conversation.id}
               className={`group flex items-center justify-between rounded-xl px-3 py-3 cursor-pointer transition-all duration-300 ease-out ${
@@ -218,6 +226,20 @@ export default function Sidebar({
               </div>
 
               <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePin(conversation.id);
+                  }}
+                  className={`p-1.5 rounded-lg transition-all duration-200 hover:scale-110 ${
+                    conversation.pinned
+                      ? "text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10"
+                      : "text-white/40 hover:text-white hover:bg-white/20"
+                  }`}
+                >
+                  <Pin size={14} className={conversation.pinned ? "fill-yellow-400" : ""} />
+                </button>
+
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

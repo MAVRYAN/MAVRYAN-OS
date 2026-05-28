@@ -31,6 +31,7 @@ type Conversation = {
   id: string;
   title: string;
   messages: Message[];
+  pinned?: boolean;
 };
 
 const suggestions = [
@@ -118,7 +119,7 @@ export default function Home() {
     useRef<Message[]>([]);
 
   const sendMessageRef =
-    useRef<((text?: string) => Promise<void>) | null>(null);
+    useRef<((text?: string, regenerateIndex?: number) => Promise<void>) | null>(null);
 
   const activeConversation =
     conversations.find(
@@ -371,7 +372,7 @@ export default function Home() {
     setEditingTitle("");
   }
 
-  async function sendMessage(messageText?: string) {
+  async function sendMessage(messageText?: string, regenerateIndex?: number) {
     const finalMessage = messageText || input;
 
     if (!finalMessage.trim()) return;
@@ -383,26 +384,36 @@ export default function Home() {
       setActiveConversationId(currentConversationId);
     }
 
-    const userMessage = {
-      role: "user" as const,
-      content: finalMessage,
-    };
+    const updatedMessages = [...messagesRef.current];
 
-    const updatedMessages = [
-      ...messagesRef.current,
-      userMessage,
-    ];
+    if (regenerateIndex === undefined) {
+      const userMessage = {
+        role: "user" as const,
+        content: finalMessage,
+      };
 
-    updateMessages(
-      updatedMessages,
-      currentConversationId
-    );
+      updatedMessages.push(userMessage);
 
-    setInput("");
+      updateMessages(
+        updatedMessages,
+        currentConversationId
+      );
 
-    if (textareaRef.current) {
-      textareaRef.current.style.height =
-        "auto";
+      setInput("");
+
+      if (textareaRef.current) {
+        textareaRef.current.style.height =
+          "auto";
+      }
+    } else {
+      updatedMessages[regenerateIndex] = {
+        role: "assistant",
+        content: "▋",
+      };
+      updateMessages(
+        updatedMessages,
+        currentConversationId
+      );
     }
 
     setLoading(true);
@@ -459,10 +470,16 @@ export default function Home() {
         sources: data.sources,
       };
 
-      updateMessages([
-        ...updatedMessages,
-        assistantMessage,
-      ], currentConversationId);
+      if (regenerateIndex === undefined) {
+        updateMessages([
+          ...updatedMessages,
+          assistantMessage,
+        ], currentConversationId);
+      } else {
+        const newMsgs = [...updatedMessages];
+        newMsgs[regenerateIndex] = assistantMessage;
+        updateMessages(newMsgs, currentConversationId);
+      }
 
       const chunkSize = 16;
 
@@ -479,18 +496,26 @@ export default function Home() {
         const currentText =
           aiText.slice(0, nextIndex);
 
-        updateMessages([
-          ...updatedMessages,
-          {
-            role: "assistant",
-            content:
-              currentText +
-              (nextIndex < aiText.length
-                ? "▋"
-                : ""),
-                    sources: data.sources,
-          },
-        ], currentConversationId);
+        const streamedMessage: Message = {
+          role: "assistant",
+          content:
+            currentText +
+            (nextIndex < aiText.length
+              ? "▋"
+              : ""),
+          sources: data.sources,
+        };
+
+        if (regenerateIndex === undefined) {
+          updateMessages([
+            ...updatedMessages,
+            streamedMessage,
+          ], currentConversationId);
+        } else {
+          const newMsgs = [...updatedMessages];
+          newMsgs[regenerateIndex] = streamedMessage;
+          updateMessages(newMsgs, currentConversationId);
+        }
 
         if (nextIndex < aiText.length) {
           await new Promise<void>(
@@ -597,19 +622,7 @@ export default function Home() {
         prevUserMsg &&
         prevUserMsg.role === "user"
       ) {
-        const truncated = messagesRef.current.slice(0, prevUserIndex);
-        messagesRef.current = truncated;
-
-        setConversations((prev) =>
-          prev.map((c) => {
-            if (c.messages.includes(assistantMsg)) {
-              return { ...c, messages: truncated };
-            }
-            return c;
-          })
-        );
-
-        sendMessageRef.current?.(prevUserMsg.content);
+        sendMessageRef.current?.(prevUserMsg.content, index);
       }
     },
     []
@@ -638,6 +651,20 @@ export default function Home() {
     setActiveConversationId("");
   }
 
+  function togglePin(id: string) {
+    setConversations((prev) =>
+      prev.map((conversation) => {
+        if (conversation.id === id) {
+          return {
+            ...conversation,
+            pinned: !conversation.pinned,
+          };
+        }
+        return conversation;
+      })
+    );
+  }
+
   return (
     <main className={`flex h-screen bg-[#0a0a0a] text-white overflow-hidden ${theme === "light" ? "invert hue-rotate-180" : ""}`}>
       {/* SIDEBAR */}
@@ -664,6 +691,7 @@ export default function Home() {
         deleteConversation={
           deleteConversation
         }
+        togglePin={togglePin}
         renameInputRef={renameInputRef}
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
