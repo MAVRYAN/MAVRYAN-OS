@@ -1,257 +1,761 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import { Bot, User, Send, Sparkles } from "lucide-react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
+import { Bot } from "lucide-react";
+
+import ChatInput from "@/components/ChatInput";
+import EmptyState from "@/components/EmptyState";
+import Header from "@/components/Header";
+import MessageBubble from "@/components/MessageBubble";
+import Sidebar from "@/components/Sidebar";
+import SettingsModal from "@/components/SettingsModal";
+import CommandPalette from "@/components/CommandPalette";
 
 type Message = {
   role: "user" | "assistant";
   content: string;
+  sources?: {
+    title: string;
+    url: string;
+    domain: string;
+  }[];
 };
 
-export default function Home() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content:
-        "👋 Hello. I am MAVRYAN.\nYour futuristic AI assistant is now online.",
-    },
-  ]);
+type Conversation = {
+  id: string;
+  title: string;
+  messages: Message[];
+};
 
+const suggestions = [
+  "Build a futuristic portfolio website",
+  "Explain quantum physics simply",
+  "Create a React dashboard UI",
+  "Write an AI startup pitch",
+];
+
+function generateSmartTitle(text: string): string {
+  let cleanText = text.trim();
+
+  const fillers = [
+    /^how do i /i, /^how to /i, /^what is /i, /^what are /i,
+    /^tell me about /i, /^tell me /i, /^can you /i, /^could you /i,
+    /^write a /i, /^write /i, /^create a /i, /^create /i,
+    /^help me with /i, /^help me /i, /^explain /i, /^please /i,
+    /^show me /i, /^give me /i, /^i need /i
+  ];
+
+  for (const filler of fillers) {
+    cleanText = cleanText.replace(filler, "");
+  }
+
+  cleanText = cleanText.replace(/[?!.,;:_]+$/, "").trim();
+
+  if (cleanText.length > 35) {
+    const truncated = cleanText.substring(0, 35);
+    const lastSpace = truncated.lastIndexOf(" ");
+    cleanText = lastSpace > 10 ? truncated.substring(0, lastSpace) : truncated;
+  }
+
+  const title = cleanText
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+
+  return title || "New Chat";
+}
+
+export default function Home() {
   const [input, setInput] = useState("");
+
   const [loading, setLoading] = useState(false);
+
+  const [copiedIndex, setCopiedIndex] =
+    useState<number | null>(null);
+
+  const [isNearBottom, setIsNearBottom] =
+    useState(true);
+
+  const [conversations, setConversations] =
+    useState<Conversation[]>([]);
+
+  const [activeConversationId, setActiveConversationId] =
+    useState<string>("");
+
+  const [editingConversationId, setEditingConversationId] =
+    useState<string | null>(null);
+
+  const [editingTitle, setEditingTitle] =
+    useState("");
+
+  const [isSettingsOpen, setIsSettingsOpen] =
+    useState(false);
+
+  const [theme, setTheme] =
+    useState<"dark" | "light">("dark");
+
+  const [webSearch, setWebSearch] =
+    useState(false);
+
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] =
+    useState(false);
 
   const chatRef = useRef<HTMLDivElement>(null);
 
+  const textareaRef =
+    useRef<HTMLTextAreaElement>(null);
+
+  const renameInputRef =
+    useRef<HTMLInputElement>(null);
+
+  const messagesRef =
+    useRef<Message[]>([]);
+
+  const sendMessageRef =
+    useRef<((text?: string) => Promise<void>) | null>(null);
+
+  const activeConversation =
+    conversations.find(
+      (c) => c.id === activeConversationId
+    );
+
+  const messages =
+    activeConversation?.messages || [];
+
   useEffect(() => {
-    chatRef.current?.scrollTo({
-      top: chatRef.current.scrollHeight,
-      behavior: "smooth",
-    });
+    messagesRef.current = messages;
   }, [messages]);
 
-  async function sendMessage() {
-    if (!input.trim()) return;
+  // LOAD STORAGE
 
-    const userMessage: Message = {
-      role: "user",
-      content: input,
+  useEffect(() => {
+    const saved =
+      localStorage.getItem(
+        "mavryan-conversations"
+      );
+
+    if (saved) {
+      const parsed =
+        JSON.parse(saved);
+
+      setConversations(parsed);
+    }
+
+    const savedTheme =
+      localStorage.getItem(
+        "mavryan-theme"
+      ) as "dark" | "light";
+
+    if (savedTheme) {
+      setTheme(savedTheme);
+    }
+
+    setActiveConversationId("");
+  }, []);
+
+  // SAVE STORAGE
+
+  useEffect(() => {
+    localStorage.setItem(
+      "mavryan-conversations",
+      JSON.stringify(conversations)
+    );
+  }, [conversations]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "mavryan-theme",
+      theme
+    );
+  }, [theme]);
+
+  // AUTO FOCUS RENAME
+
+  useEffect(() => {
+    if (
+      editingConversationId &&
+      renameInputRef.current
+    ) {
+      renameInputRef.current.focus();
+    }
+  }, [editingConversationId]);
+
+  // GLOBAL KEYBOARD SHORTCUTS
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
     };
 
-    const updatedMessages = [...messages, userMessage];
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
-    setMessages(updatedMessages);
-    setInput("");
-    setLoading(true);
+  // SMART SCROLL
 
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: updatedMessages,
-        }),
+  useEffect(() => {
+    const container = chatRef.current;
+
+    if (!container) return;
+
+    const handleScroll = () => {
+      const threshold = 150;
+
+      const distanceFromBottom =
+        container.scrollHeight -
+        container.scrollTop -
+        container.clientHeight;
+
+      setIsNearBottom(
+        distanceFromBottom < threshold
+      );
+    };
+
+    handleScroll();
+
+    container.addEventListener(
+      "scroll",
+      handleScroll
+    );
+
+    return () => {
+      container.removeEventListener(
+        "scroll",
+        handleScroll
+      );
+    };
+  }, []);
+
+  const scrollToBottom = (
+    smooth = true
+  ) => {
+    if (
+      chatRef.current &&
+      isNearBottom
+    ) {
+      chatRef.current.scrollTo({
+        top:
+          chatRef.current.scrollHeight,
+        behavior: smooth
+          ? "smooth"
+          : "auto",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (
+      !chatRef.current ||
+      !isNearBottom
+    ) {
+      return;
+    }
+
+    const animationFrame =
+      requestAnimationFrame(() => {
+        chatRef.current?.scrollTo({
+          top:
+            chatRef.current.scrollHeight,
+          behavior: "auto",
+        });
       });
 
-      const data = await response.json();
+    return () => {
+      cancelAnimationFrame(animationFrame);
+    };
+  }, [messages, isNearBottom]);
 
-      const aiMessage: Message = {
+  function createNewChat() {
+    const newChat: Conversation = {
+      id: Date.now().toString(),
+      title: "New Chat",
+      messages: [],
+    };
+
+    setConversations((prev) => [
+      newChat,
+      ...prev,
+    ]);
+
+    setActiveConversationId(newChat.id);
+  }
+
+  function updateMessages(
+    updatedMessages: Message[],
+    conversationId: string = activeConversationId
+  ) {
+    setConversations((prev) => {
+      const exists = prev.some(
+        (c) => c.id === conversationId
+      );
+
+      if (!exists) {
+        return [
+          {
+            id: conversationId,
+            title:
+              updatedMessages.length > 0
+                ? generateSmartTitle(updatedMessages[0].content)
+                : "New Chat",
+            messages: updatedMessages,
+          },
+          ...prev,
+        ];
+      }
+
+      return prev.map((conversation) => {
+        if (
+          conversation.id ===
+          conversationId
+        ) {
+          return {
+            ...conversation,
+            title:
+              conversation.title ===
+                "New Chat" &&
+              updatedMessages.length > 0
+                ? generateSmartTitle(updatedMessages[0].content)
+                : conversation.title,
+            messages: updatedMessages,
+          };
+        }
+
+        return conversation;
+      });
+    });
+  }
+
+  function startRename(
+    conversationId: string,
+    currentTitle: string
+  ) {
+    setEditingConversationId(
+      conversationId
+    );
+
+    setEditingTitle(currentTitle);
+  }
+
+  function saveRename() {
+    if (!editingConversationId) return;
+
+    setConversations((prev) =>
+      prev.map((conversation) => {
+        if (
+          conversation.id ===
+          editingConversationId
+        ) {
+          return {
+            ...conversation,
+            title:
+              editingTitle.trim() ||
+              "Untitled Chat",
+          };
+        }
+
+        return conversation;
+      })
+    );
+
+    setEditingConversationId(null);
+
+    setEditingTitle("");
+  }
+
+  async function sendMessage(messageText?: string) {
+    const finalMessage = messageText || input;
+
+    if (!finalMessage.trim()) return;
+
+    let currentConversationId = activeConversationId;
+
+    if (!currentConversationId) {
+      currentConversationId = Date.now().toString();
+      setActiveConversationId(currentConversationId);
+    }
+
+    const userMessage = {
+      role: "user" as const,
+      content: finalMessage,
+    };
+
+    const updatedMessages = [
+      ...messagesRef.current,
+      userMessage,
+    ];
+
+    updateMessages(
+      updatedMessages,
+      currentConversationId
+    );
+
+    setInput("");
+
+    if (textareaRef.current) {
+      textareaRef.current.style.height =
+        "auto";
+    }
+
+    setLoading(true);
+
+    setTimeout(() => {
+      scrollToBottom(true);
+    }, 100);
+
+    try {
+      const response = await fetch(
+        "/api/chat",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            messages: [
+              {
+                role: "user",
+                content: finalMessage,
+              },
+            ],
+            webSearch,
+          }),
+        }
+      );
+
+      const data =
+        await response.json();
+
+      let aiText = "";
+
+      if (typeof data === "string") {
+        aiText = data;
+      } else if (data.content) {
+        aiText = data.content;
+      } else if (data.message) {
+        aiText = data.message;
+      } else {
+        aiText = JSON.stringify(
+          data,
+          null,
+          2
+        );
+      }
+
+      const assistantMessage: Message = {
         role: "assistant",
-        content: data.reply,
+        content: "",
+        sources: data.sources,
       };
 
-      setMessages((prev) => [...prev, aiMessage]);
+      updateMessages([
+        ...updatedMessages,
+        assistantMessage,
+      ], currentConversationId);
+
+      const chunkSize = 16;
+
+      for (
+        let i = chunkSize;
+        i <= aiText.length + chunkSize;
+        i += chunkSize
+      ) {
+        const nextIndex = Math.min(
+          i,
+          aiText.length
+        );
+
+        const currentText =
+          aiText.slice(0, nextIndex);
+
+        updateMessages([
+          ...updatedMessages,
+          {
+            role: "assistant",
+            content:
+              currentText +
+              (nextIndex < aiText.length
+                ? "▋"
+                : ""),
+                    sources: data.sources,
+          },
+        ], currentConversationId);
+
+        if (nextIndex < aiText.length) {
+          await new Promise<void>(
+            (resolve) => {
+              requestAnimationFrame(() =>
+                resolve()
+              );
+            }
+          );
+        }
+      }
     } catch (error) {
-      setMessages((prev) => [
-        ...prev,
+      updateMessages([
+        ...updatedMessages,
         {
           role: "assistant",
-          content: "⚠️ MAVRYAN encountered an error.",
+          content:
+            "⚠️ MAVRYAN encountered a system malfunction.",
         },
-      ]);
+      ], currentConversationId);
     }
 
     setLoading(false);
   }
 
+  sendMessageRef.current = sendMessage;
+
+  const copyMessage = useCallback(async (
+    text: string,
+    index: number
+  ) => {
+    await navigator.clipboard.writeText(
+      text.replace("▋", "")
+    );
+
+    setCopiedIndex(index);
+
+    setTimeout(() => {
+      setCopiedIndex(null);
+    }, 2000);
+  }, []);
+
+  const deleteMessage = useCallback(
+    (index: number) => {
+      setConversations((prev) =>
+        prev.map((conversation) => {
+          if (
+            conversation.id !==
+            activeConversationId
+          ) {
+            return conversation;
+          }
+
+          const updatedMessages =
+            conversation.messages.filter(
+              (_, i) => i !== index
+            );
+
+          return {
+            ...conversation,
+            title:
+              conversation.title ===
+                "New Chat" &&
+              updatedMessages.length > 0
+                ? generateSmartTitle(updatedMessages[0].content)
+                : conversation.title,
+            messages: updatedMessages,
+          };
+        })
+      );
+    },
+    [activeConversationId]
+  );
+
+  const handleEditMessage = useCallback(
+    (index: number) => {
+      const message = messagesRef.current[index];
+
+      if (message && message.role === "user") {
+        setInput(message.content);
+
+        setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.focus();
+            textareaRef.current.style.height = "auto";
+            textareaRef.current.style.height =
+              textareaRef.current.scrollHeight + "px";
+          }
+        }, 10);
+      }
+    },
+    []
+  );
+
+  const handleRegenerateMessage = useCallback(
+    (index: number) => {
+      const assistantMsg = messagesRef.current[index];
+      const prevUserIndex = index - 1;
+      const prevUserMsg = messagesRef.current[prevUserIndex];
+
+      if (
+        assistantMsg &&
+        assistantMsg.role === "assistant" &&
+        prevUserMsg &&
+        prevUserMsg.role === "user"
+      ) {
+        const truncated = messagesRef.current.slice(0, prevUserIndex);
+        messagesRef.current = truncated;
+
+        setConversations((prev) =>
+          prev.map((c) => {
+            if (c.messages.includes(assistantMsg)) {
+              return { ...c, messages: truncated };
+            }
+            return c;
+          })
+        );
+
+        sendMessageRef.current?.(prevUserMsg.content);
+      }
+    },
+    []
+  );
+
+  function deleteConversation(id: string) {
+    const updated =
+      conversations.filter(
+        (conversation) =>
+          conversation.id !== id
+      );
+
+    setConversations(updated);
+
+    if (updated.length > 0) {
+      setActiveConversationId(
+        updated[0].id
+      );
+    } else {
+      createNewChat();
+    }
+  }
+
+  function clearAllChats() {
+    setConversations([]);
+    setActiveConversationId("");
+  }
+
   return (
-    <main className="h-screen w-screen bg-black text-white overflow-hidden flex">
-
+    <main className={`flex h-screen bg-[#0a0a0a] text-white overflow-hidden ${theme === "light" ? "invert hue-rotate-180" : ""}`}>
       {/* SIDEBAR */}
-      <div className="w-[260px] border-r border-white/10 bg-black/40 backdrop-blur-xl p-5 flex flex-col">
 
-        <motion.h1
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-4xl font-bold tracking-wider mb-10"
-        >
-          MAVRYAN
-        </motion.h1>
-
-        <button className="bg-white text-black rounded-xl py-3 font-semibold hover:scale-105 transition mb-8">
-          + New Chat
-        </button>
-
-        <div className="space-y-4 text-zinc-400">
-          <div className="hover:text-white transition cursor-pointer">
-            ⚡ AI Assistant
-          </div>
-
-          <div className="hover:text-white transition cursor-pointer">
-            💻 Coding Help
-          </div>
-
-          <div className="hover:text-white transition cursor-pointer">
-            🚀 Research Agent
-          </div>
-
-          <div className="hover:text-white transition cursor-pointer">
-            📄 PDF Analyzer
-          </div>
-        </div>
-
-        <div className="mt-auto text-zinc-600 text-sm">
-          MAVRYAN OS v1.0
-        </div>
-      </div>
+      <Sidebar
+        conversations={conversations}
+        activeConversationId={
+          activeConversationId
+        }
+        setActiveConversationId={
+          setActiveConversationId
+        }
+        createNewChat={createNewChat}
+        editingConversationId={
+          editingConversationId
+        }
+        setEditingConversationId={
+          setEditingConversationId
+        }
+        editingTitle={editingTitle}
+        setEditingTitle={setEditingTitle}
+        saveRename={saveRename}
+        startRename={startRename}
+        deleteConversation={
+          deleteConversation
+        }
+        renameInputRef={renameInputRef}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+      />
 
       {/* MAIN */}
-      <div className="flex-1 relative overflow-hidden bg-black">
 
-        {/* BACKGROUND GLOW */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute w-[500px] h-[500px] bg-white/5 blur-3xl rounded-full top-[-100px] left-[30%]" />
+      <section className="flex-1 flex flex-col relative">
+        <Header />
 
-          <div className="absolute w-[300px] h-[300px] bg-blue-500/10 blur-3xl rounded-full bottom-[-100px] right-[10%]" />
-        </div>
+        {/* CHAT */}
 
-        {/* HEADER */}
-        <div className="relative z-10 border-b border-white/10 px-8 py-5 backdrop-blur-xl">
-          <div className="flex items-center gap-3">
-            <Sparkles className="text-white" />
-            <h1 className="text-2xl font-bold tracking-wide">
-              MAVRYAN AI
-            </h1>
-          </div>
-        </div>
-
-        {/* CHAT AREA */}
         <div
           ref={chatRef}
-          className="relative z-10 h-[calc(100vh-170px)] overflow-y-auto px-8 py-8 space-y-8"
+          className="flex-1 overflow-y-auto"
         >
-          {messages.map((msg, index) => (
-            <motion.div
-              key={index}
-              initial={{
-                opacity: 0,
-                y: 20,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
-              transition={{
-                duration: 0.3,
-              }}
-              className={`flex ${
-                msg.role === "user"
-                  ? "justify-end"
-                  : "justify-start"
-              }`}
-            >
-              <div
-                className={`max-w-[70%] rounded-3xl px-6 py-5 border backdrop-blur-xl shadow-2xl ${
-                  msg.role === "user"
-                    ? "bg-white text-black border-white/20"
-                    : "bg-white/5 border-white/10 text-white"
-                }`}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  {msg.role === "assistant" ? (
-                    <Bot size={18} />
-                  ) : (
-                    <User size={18} />
-                  )}
-
-                  <span className="text-sm opacity-70">
-                    {msg.role === "assistant"
-                      ? "MAVRYAN"
-                      : "You"}
-                  </span>
-                </div>
-
-                <div className="whitespace-pre-wrap leading-8 text-[17px]">
-                  {msg.content}
-                </div>
-              </div>
-            </motion.div>
-          ))}
-
-          {loading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex justify-start"
-            >
-              <div className="bg-white/5 border border-white/10 rounded-3xl px-6 py-5 backdrop-blur-xl">
-                <div className="flex gap-2 items-center">
-                  <Bot size={18} />
-
-                  <span>MAVRYAN is thinking</span>
-
-                  <motion.div
-                    animate={{
-                      opacity: [0.3, 1, 0.3],
-                    }}
-                    transition={{
-                      repeat: Infinity,
-                      duration: 1,
-                    }}
-                    className="flex gap-1"
-                  >
-                    <div>.</div>
-                    <div>.</div>
-                    <div>.</div>
-                  </motion.div>
-                </div>
-              </div>
-            </motion.div>
+          {messages.length === 0 ? (
+            <EmptyState
+              suggestions={suggestions}
+              sendMessage={sendMessage}
+            />
+          ) : (
+            <div className="max-w-4xl mx-auto px-6 py-10 space-y-10">
+                {messages.map(
+                  (message, index) => (
+                    <MessageBubble
+                      key={index}
+                      message={message}
+                      index={index}
+                      copiedIndex={copiedIndex}
+                      copyMessage={copyMessage}
+                      deleteMessage={deleteMessage}
+                      onEdit={handleEditMessage}
+                      onRegenerate={handleRegenerateMessage}
+                    />
+                  )
+                )}
+                {loading && messages[messages.length - 1]?.role === "user" && (
+                  <div className="flex gap-4">
+                    <div className="mt-1">
+                      <div className="h-9 w-9 rounded-xl bg-white text-black flex items-center justify-center animate-pulse shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                        <Bot size={18} />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium mb-3">MAVRYAN</p>
+                      <div className="flex items-center gap-2 h-7">
+                        <span className="text-[15px] text-white/50 animate-pulse">MAVRYAN is thinking</span>
+                        <div className="flex items-center gap-1 mt-1">
+                          <div className="w-1.5 h-1.5 rounded-full bg-white/40 animate-bounce [animation-delay:-0.3s]"></div>
+                          <div className="w-1.5 h-1.5 rounded-full bg-white/40 animate-bounce [animation-delay:-0.15s]"></div>
+                          <div className="w-1.5 h-1.5 rounded-full bg-white/40 animate-bounce"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+            </div>
           )}
         </div>
 
         {/* INPUT */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-white/10 bg-black/40 backdrop-blur-xl px-8 py-5">
-          <div className="flex items-center gap-4">
 
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Message MAVRYAN..."
-              rows={1}
-              className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-4 outline-none resize-none text-white placeholder:text-zinc-500 focus:border-white/30 transition"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  sendMessage();
-                }
-              }}
-            />
+        <ChatInput
+          input={input}
+          setInput={setInput}
+          sendMessage={sendMessage}
+          loading={loading}
+          textareaRef={textareaRef}
+          webSearch={webSearch}
+          setWebSearch={setWebSearch}
+        />
+      </section>
 
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              whileHover={{ scale: 1.05 }}
-              onClick={sendMessage}
-              className="bg-white text-black p-4 rounded-2xl font-bold"
-            >
-              <Send />
-            </motion.button>
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        clearAllChats={clearAllChats}
+        theme={theme}
+        setTheme={setTheme}
+      />
 
-          </div>
-        </div>
-      </div>
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onNewChat={createNewChat}
+        onToggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
+        onToggleWebSearch={() => setWebSearch(!webSearch)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        onClearChats={clearAllChats}
+        theme={theme}
+        webSearch={webSearch}
+      />
     </main>
   );
 }

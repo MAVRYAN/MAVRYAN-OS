@@ -9,7 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/groq": "^3.0.39",
     "@ai-sdk/openai": "^3.0.65",
+    "@ai-sdk/react": "^3.0.193",
     "@google/generative-ai": "^0.24.1",
     "ai": "^6.0.191",
     "framer-motion": "^12.40.0",
@@ -22,6 +24,8 @@
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^16.1.1",
     "react-tsparticles": "^2.12.2",
+    "rehype-highlight": "^7.0.2",
+    "remark-gfm": "^4.0.1",
     "tsparticles": "^4.0.5"
   },
   "devDependencies": {
