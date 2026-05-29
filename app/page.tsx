@@ -436,12 +436,13 @@ export default function Home() {
           },
 
           body: JSON.stringify({
-            messages: [
-              {
-                role: "user",
-                content: finalMessage,
-              },
-            ],
+            messages: (regenerateIndex === undefined
+              ? updatedMessages
+              : updatedMessages.slice(0, regenerateIndex)
+            ).map((msg) => ({
+              role: msg.role,
+              content: msg.content.replace("▋", ""),
+            })),
             webSearch,
           }),
         }

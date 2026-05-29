@@ -96,6 +96,11 @@ export async function POST(req: Request) {
             .join("\n")}`
         : "Known user facts:\n- None yet.";
 
+    const formattedMessages = messages.map((msg: any, index: number) => ({
+      role: msg.role,
+      content: index === messages.length - 1 ? msg.content + searchContext : msg.content,
+    }));
+
     const completion =
       await groq.chat.completions.create({
         model: "llama-3.3-70b-versatile",
@@ -119,11 +124,7 @@ ${memoryPrompt}
 Use known user facts quietly and naturally when relevant. Do not mention memory unless the user asks.
 `,
           },
-
-          {
-            role: "user",
-            content: lastMessage + searchContext,
-          },
+          ...formattedMessages,
         ],
 
         temperature: 0.9,
