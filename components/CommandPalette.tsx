@@ -30,16 +30,16 @@ export default function CommandPalette({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] md:pt-[15vh] p-4 bg-black/60 backdrop-blur-sm transition-opacity">
       <div className="absolute inset-0" onClick={onClose} />
       
-      <div className="relative w-full max-w-xl bg-[#0a0a0a] border border-white/10 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col">
-        <div className="p-4 border-b border-white/5 flex items-center gap-3 bg-white/[0.02]">
-          <Search size={18} className="text-white/40 ml-1" />
+      <div className="relative w-full max-w-xl bg-[#0a0a0a] border border-white/10 rounded-2xl md:rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col">
+        <div className="p-3 md:p-4 border-b border-white/5 flex items-center gap-3 bg-white/[0.02]">
+          <Search size={18} className="text-white/40 ml-1 md:ml-2 shrink-0" />
           <input
             autoFocus
             placeholder="Type a command..."
-            className="bg-transparent outline-none flex-1 text-[15px] placeholder:text-white/40 text-white/90"
+            className="bg-transparent outline-none flex-1 text-[16px] md:text-[15px] placeholder:text-white/40 text-white/90 py-1"
             onKeyDown={(e) => {
               if (e.key === "Escape") {
                 onClose();
@@ -48,14 +48,14 @@ export default function CommandPalette({
           />
         </div>
 
-        <div className="p-2 py-3 overflow-y-auto max-h-[400px] space-y-1">
-          <div className="px-3 pb-2 text-[11px] font-medium text-white/30 uppercase tracking-wider">
+        <div className="p-2 py-2 md:py-3 overflow-y-auto max-h-[60vh] md:max-h-[400px] space-y-1">
+          <div className="px-3 pb-2 pt-1 md:pt-0 text-[11px] font-medium text-white/30 uppercase tracking-wider">
             Actions
           </div>
           
           <button
             onClick={() => { onNewChat(); onClose(); }}
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/[0.04] transition-all text-left group"
+            className="w-full flex items-center gap-3 px-3 py-3.5 md:py-3 rounded-xl hover:bg-white/[0.04] active:bg-white/[0.06] transition-all text-left group"
           >
             <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center text-white/60 group-hover:text-white group-hover:bg-white/10 transition-colors shadow-sm">
               <Plus size={16} />
@@ -65,7 +65,7 @@ export default function CommandPalette({
 
           <button
             onClick={() => { onExportChat(); onClose(); }}
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/[0.04] transition-all text-left group"
+            className="w-full flex items-center gap-3 px-3 py-3.5 md:py-3 rounded-xl hover:bg-white/[0.04] active:bg-white/[0.06] transition-all text-left group"
           >
             <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center text-white/60 group-hover:text-white group-hover:bg-white/10 transition-colors shadow-sm">
               <Download size={16} />
@@ -75,7 +75,7 @@ export default function CommandPalette({
 
           <button
             onClick={() => { onToggleTheme(); onClose(); }}
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/[0.04] transition-all text-left group"
+            className="w-full flex items-center gap-3 px-3 py-3.5 md:py-3 rounded-xl hover:bg-white/[0.04] active:bg-white/[0.06] transition-all text-left group"
           >
             <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center text-white/60 group-hover:text-white group-hover:bg-white/10 transition-colors shadow-sm">
               <Palette size={16} />
@@ -86,7 +86,7 @@ export default function CommandPalette({
 
           <button
             onClick={() => { onToggleWebSearch(); onClose(); }}
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/[0.04] transition-all text-left group"
+            className="w-full flex items-center gap-3 px-3 py-3.5 md:py-3 rounded-xl hover:bg-white/[0.04] active:bg-white/[0.06] transition-all text-left group"
           >
             <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center text-white/60 group-hover:text-white group-hover:bg-white/10 transition-colors shadow-sm">
               <Globe size={16} />
@@ -99,7 +99,7 @@ export default function CommandPalette({
 
           <button
             onClick={() => { onOpenSettings(); onClose(); }}
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/[0.04] transition-all text-left group"
+            className="w-full flex items-center gap-3 px-3 py-3.5 md:py-3 rounded-xl hover:bg-white/[0.04] active:bg-white/[0.06] transition-all text-left group"
           >
             <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center text-white/60 group-hover:text-white group-hover:bg-white/10 transition-colors shadow-sm">
               <Settings size={16} />
@@ -109,7 +109,7 @@ export default function CommandPalette({
 
           <button
             onClick={() => { onClearChats(); onClose(); }}
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/[0.04] transition-all text-left group"
+            className="w-full flex items-center gap-3 px-3 py-3.5 md:py-3 rounded-xl hover:bg-white/[0.04] active:bg-white/[0.06] transition-all text-left group"
           >
             <div className="h-8 w-8 rounded-lg bg-red-500/10 flex items-center justify-center text-red-400 group-hover:bg-red-500/20 transition-colors shadow-sm">
               <Trash2 size={16} />

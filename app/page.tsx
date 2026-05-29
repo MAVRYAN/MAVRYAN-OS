@@ -107,6 +107,8 @@ export default function Home() {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] =
     useState(false);
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   const chatRef = useRef<HTMLDivElement>(null);
 
   const textareaRef =
@@ -694,7 +696,7 @@ export default function Home() {
   }
 
   return (
-    <main className={`flex h-screen bg-[#0a0a0a] text-white overflow-hidden ${theme === "light" ? "invert hue-rotate-180" : ""}`}>
+    <main className={`flex h-[100dvh] bg-[#0a0a0a] text-white overflow-hidden ${theme === "light" ? "invert hue-rotate-180" : ""}`}>
       {/* SIDEBAR */}
 
       <Sidebar
@@ -722,12 +724,14 @@ export default function Home() {
         togglePin={togglePin}
         renameInputRef={renameInputRef}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
       />
 
       {/* MAIN */}
 
       <section className="flex-1 flex flex-col relative">
-        <Header />
+        <Header onOpenSidebar={() => setIsSidebarOpen(true)} />
 
         {/* CHAT */}
 

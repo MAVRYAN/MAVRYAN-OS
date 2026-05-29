@@ -61,6 +61,8 @@ type SidebarProps = {
   togglePin: (id: string) => void;
   renameInputRef: RefObject<HTMLInputElement | null>;
   onOpenSettings: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
 };
 
 export default function Sidebar({
@@ -78,6 +80,8 @@ export default function Sidebar({
   togglePin,
   renameInputRef,
   onOpenSettings,
+  isOpen = false,
+  onClose,
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -103,10 +107,20 @@ export default function Sidebar({
   const sortedConversations = [...pinnedChats, ...unpinnedChats];
 
   return (
-    <aside className="w-[280px] border-r border-white/5 bg-[#080808] flex flex-col">
+    <>
+      <div 
+        className={`fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity md:hidden ${
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={onClose}
+      />
+
+      <aside className={`fixed inset-y-0 left-0 z-50 w-[280px] border-r border-white/5 bg-[#080808] flex flex-col transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:z-auto ${
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      }`}>
       <div className="p-4 flex items-center justify-between">
         <button
-          onClick={createNewChat}
+          onClick={() => { createNewChat(); onClose?.(); }}
           className="flex items-center gap-2 text-sm font-medium hover:bg-white/10 hover:shadow-[0_0_15px_rgba(255,255,255,0.05)] px-3 py-2 rounded-xl transition-all duration-300 ease-out active:scale-95"
         >
           <Plus size={18} />
@@ -173,11 +187,10 @@ export default function Sidebar({
                   ? "bg-white/10 border border-white/5 shadow-[0_2px_10px_rgba(0,0,0,0.3)]"
                   : "border border-transparent hover:bg-white/[0.04] hover:-translate-y-[1px] hover:shadow-[0_2px_10px_rgba(0,0,0,0.2)]"
               }`}
-              onClick={() =>
-                setActiveConversationId(
-                  conversation.id
-                )
-              }
+              onClick={() => {
+                setActiveConversationId(conversation.id);
+                onClose?.();
+              }}
             >
               <div className="flex items-center gap-3 overflow-hidden flex-1">
                 <MessageSquare
@@ -225,7 +238,7 @@ export default function Sidebar({
                 )}
               </div>
 
-              <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition">
+              <div className="opacity-100 md:opacity-0 group-hover:opacity-100 flex items-center gap-1 transition">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -249,7 +262,7 @@ export default function Sidebar({
                       conversation.title
                     );
                   }}
-                  className="hover:bg-white/20 hover:scale-110 p-1.5 rounded-lg transition-all duration-200"
+                  className="text-white/40 hover:text-white hover:bg-white/20 hover:scale-110 p-1.5 rounded-lg transition-all duration-200"
                 >
                   <Edit3 size={14} />
                 </button>
@@ -275,7 +288,7 @@ export default function Sidebar({
       {/* USER */}
 
       <div
-        onClick={onOpenSettings}
+        onClick={() => { onOpenSettings(); onClose?.(); }}
         className="mt-auto p-4 border-t border-white/5 hover:bg-white/[0.02] transition-colors cursor-pointer flex items-center justify-between group"
       >
         <div className="flex items-center gap-3">
@@ -300,5 +313,6 @@ export default function Sidebar({
         />
       </div>
     </aside>
+    </>
   );
 }

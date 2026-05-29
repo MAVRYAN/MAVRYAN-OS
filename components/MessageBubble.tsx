@@ -83,7 +83,7 @@ const markdownComponents: Components = {
         style={syntaxTheme}
         language={match[1]}
         PreTag="div"
-        className="!m-0 !bg-transparent !p-4 sm:!p-5 [&>code]:!text-[14px] [&>code]:!leading-relaxed [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
+        className="!m-0 !bg-transparent !p-4 sm:!p-5 [&>code]:!text-[13px] sm:[&>code]:!text-[14px] [&>code]:!leading-relaxed [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent !overflow-x-auto"
         {...props}
       >
         {String(children).replace(
@@ -115,10 +115,10 @@ function MessageBubble({
   const cleanContent = isStreaming ? message.content.slice(0, -1) : message.content;
 
   return (
-    <div className={`group flex gap-5 transition-all duration-500 ease-out hover:bg-white/[0.02] p-4 -mx-4 rounded-3xl ${message.role === "user" ? "bg-white/[0.01]" : ""}`}>
-      <div className="mt-1">
+    <div className={`group flex gap-3 md:gap-5 transition-all duration-500 ease-out hover:bg-white/[0.02] p-3 md:p-4 -mx-3 md:-mx-4 rounded-3xl ${message.role === "user" ? "bg-white/[0.01]" : ""}`}>
+      <div className="mt-1 shrink-0">
         <div
-          className={`h-9 w-9 rounded-xl flex items-center justify-center shadow-sm transition-all duration-500 ${
+          className={`h-8 w-8 md:h-9 md:w-9 rounded-xl flex items-center justify-center shadow-sm transition-all duration-500 ${
             message.role ===
             "assistant"
               ? isStreaming
@@ -129,15 +129,15 @@ function MessageBubble({
         >
           {message.role ===
           "assistant" ? (
-            <Bot size={18} />
+            <Bot size={18} className="w-[16px] h-[16px] md:w-[18px] md:h-[18px]" />
           ) : (
-            <User size={18} />
+            <User size={18} className="w-[16px] h-[16px] md:w-[18px] md:h-[18px]" />
           )}
         </div>
       </div>
 
       <div className="flex-1 min-w-0 pt-0.5">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2 md:mb-3">
           <p className="font-medium text-[15px] text-white/90">
             {message.role ===
             "assistant"
@@ -145,7 +145,7 @@ function MessageBubble({
               : "You"}
           </p>
 
-          <div className="opacity-0 group-hover:opacity-100 flex items-center gap-2 transition-opacity duration-300">
+          <div className="opacity-100 md:opacity-0 group-hover:opacity-100 flex items-center gap-1 md:gap-2 transition-opacity duration-300">
             {message.role === "user" && (
               <button
                 onClick={() =>
@@ -204,7 +204,7 @@ function MessageBubble({
           </div>
         </div>
 
-        <div className={`prose prose-invert max-w-none prose-p:leading-relaxed prose-pre:p-0 prose-pre:border prose-pre:border-white/5 prose-pre:rounded-2xl prose-pre:bg-[#050505] prose-pre:shadow-[0_4px_20px_rgba(0,0,0,0.2)] prose-pre:my-6 transition-opacity duration-500 ${message.role === "user" ? "text-white/80" : "text-white/90"} ${isStreaming ? "opacity-90 [&>*:last-child]:after:content-['▋'] [&>*:last-child]:after:animate-pulse [&>*:last-child]:after:ml-0.5 empty:after:content-['▋'] empty:after:animate-pulse" : "opacity-100"}`}>
+        <div className={`prose prose-invert max-w-none prose-p:leading-relaxed prose-pre:p-0 prose-pre:border prose-pre:border-white/5 prose-pre:rounded-2xl prose-pre:bg-[#050505] prose-pre:shadow-[0_4px_20px_rgba(0,0,0,0.2)] prose-pre:my-4 md:prose-pre:my-6 transition-opacity duration-500 break-words ${message.role === "user" ? "text-white/80" : "text-white/90"} ${isStreaming ? "opacity-90 [&>*:last-child]:after:content-['▋'] [&>*:last-child]:after:animate-pulse [&>*:last-child]:after:ml-0.5 empty:after:content-['▋'] empty:after:animate-pulse" : "opacity-100"}`}>
           <ReactMarkdown
             components={
               markdownComponents
@@ -215,14 +215,14 @@ function MessageBubble({
         </div>
 
         {message.sources && message.sources.length > 0 && (
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-4 md:mt-6 flex flex-col sm:flex-row sm:flex-wrap gap-2 md:gap-3">
             {message.sources.map((source, idx) => (
               <a
                 key={idx}
                 href={source.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] hover:border-white/10 transition-all duration-300 group max-w-[280px]"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] hover:border-white/10 transition-all duration-300 group w-full sm:w-auto sm:max-w-[280px]"
               >
                 <div className="h-7 w-7 rounded-lg bg-white/5 flex items-center justify-center text-white/40 group-hover:text-white/80 transition-colors shrink-0">
                   <ExternalLink size={13} />

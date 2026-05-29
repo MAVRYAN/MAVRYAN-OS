@@ -21,18 +21,18 @@ export default function SettingsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity p-4">
-      <div className="w-full max-w-md bg-[#0a0a0a] border border-white/10 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] overflow-hidden">
-        <div className="flex items-center justify-between p-5 border-b border-white/5">
+      <div className="w-full max-w-md bg-[#0a0a0a] border border-white/10 rounded-2xl md:rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] overflow-hidden">
+        <div className="flex items-center justify-between p-4 md:p-5 border-b border-white/5">
           <h2 className="text-[15px] font-medium text-white/90">Settings</h2>
           <button
             onClick={onClose}
-            className="text-white/40 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-all duration-200"
+            className="text-white/40 hover:text-white hover:bg-white/10 active:scale-95 p-1.5 rounded-lg transition-all duration-200"
           >
             <X size={16} />
           </button>
         </div>
 
-        <div className="p-5 space-y-6">
+        <div className="p-4 md:p-5 space-y-6">
           <div className="space-y-2">
             <h3 className="text-[11px] font-medium text-white/40 uppercase tracking-wider mb-3 px-1">
               Data & Memory
@@ -42,7 +42,7 @@ export default function SettingsModal({
                 clearAllChats();
                 onClose();
               }}
-              className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/5 transition-all text-left group"
+              className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.04] active:bg-white/[0.06] border border-transparent hover:border-white/5 transition-all text-left group"
             >
               <div className="flex items-center gap-3 text-red-400">
                 <div className="p-2 bg-red-500/10 rounded-lg group-hover:bg-red-500/20 transition-colors">
@@ -52,7 +52,7 @@ export default function SettingsModal({
               </div>
             </button>
 
-            <button className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/5 transition-all text-left group">
+            <button className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.04] active:bg-white/[0.06] border border-transparent hover:border-white/5 transition-all text-left group">
               <div className="flex items-center gap-3 text-white/70 group-hover:text-white/90 transition-colors">
                 <div className="p-2 bg-white/5 rounded-lg group-hover:bg-white/10 transition-colors">
                   <Cpu size={16} />
@@ -71,7 +71,7 @@ export default function SettingsModal({
             </h3>
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/5 transition-all text-left group"
+              className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.04] active:bg-white/[0.06] border border-transparent hover:border-white/5 transition-all text-left group"
             >
               <div className="flex items-center gap-3 text-white/70 group-hover:text-white/90 transition-colors">
                 <div className="p-2 bg-white/5 rounded-lg group-hover:bg-white/10 transition-colors">
@@ -84,7 +84,7 @@ export default function SettingsModal({
               </span>
             </button>
 
-            <button className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/5 transition-all text-left group">
+            <button className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.04] active:bg-white/[0.06] border border-transparent hover:border-white/5 transition-all text-left group">
               <div className="flex items-center gap-3 text-white/70 group-hover:text-white/90 transition-colors">
                 <div className="p-2 bg-white/5 rounded-lg group-hover:bg-white/10 transition-colors">
                   <Zap size={16} />
