@@ -34,6 +34,20 @@
       "value": "i like fast and furious movie",
       "createdAt": 1780096137027,
       "lastMentionedAt": 1780096137027
+    },
+    {
+      "id": "22e41359-1849-4eea-aab8-6d700769216b",
+      "type": "preference",
+      "value": "blue",
+      "createdAt": 1780098779723,
+      "lastMentionedAt": 1780098779723
+    },
+    {
+      "id": "d3bfec47-0f0f-4cff-8928-728bac1ac8df",
+      "type": "preference",
+      "value": "Clash Royale",
+      "createdAt": 1780098841722,
+      "lastMentionedAt": 1780098841722
     }
   ]
 }

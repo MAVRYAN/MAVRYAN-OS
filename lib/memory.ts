@@ -1,5 +1,6 @@
 import { readFile, writeFile } from "fs/promises";
 import { randomUUID } from "crypto";
+import Groq from "groq-sdk";
 
 export type MemoryFact = {
   id: string;
@@ -60,10 +61,14 @@ export function getMemoryValues(memory: Memory): string[] {
   return memory.facts.map((fact) => fact.value);
 }
 
-export function addMemoryValue(memory: Memory, value: string): void {
+export function addMemoryValue(
+  memory: Memory,
+  value: string,
+  type: MemoryFact["type"] = "personal"
+): void {
   memory.facts.push({
     id: randomUUID(),
-    type: "personal",
+    type,
     value,
     createdAt: Date.now(),
     lastMentionedAt: Date.now(),
@@ -144,4 +149,73 @@ export function extractMemory(
         : "";
     })
     .filter(Boolean);
+}
+
+export async function extractMemoryWithAI(
+  userMessage: string
+): Promise<{
+  remember: boolean;
+  facts: { type: MemoryFact["type"]; value: string }[];
+}> {
+  if (!userMessage || userMessage.trim().length < 5) {
+    return { remember: false, facts: [] };
+  }
+
+  try {
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: [
+        {
+          role: "system",
+          content: `You are a memory extraction system. Analyze the user message and extract long-term facts.
+Remember: preferences, favorite things, skills, technologies used, education, career goals, ongoing projects, long-term interests, recurring personal context.
+Do NOT remember: temporary requests, one-time tasks, random questions, weather, generic conversation filler.
+
+Return ONLY a valid JSON object with this exact structure:
+{
+  "remember": boolean,
+  "facts": [
+    {
+      "type": "preference" | "skill" | "technology" | "education" | "career_goal" | "project" | "personal",
+      "value": "string"
+    }
+  ]
+}
+
+If there are no relevant facts to remember, return {"remember": false, "facts": []}.`,
+        },
+        {
+          role: "user",
+          content: userMessage,
+        },
+      ],
+      temperature: 0.1,
+      response_format: { type: "json_object" },
+    });
+
+    const resultText = completion.choices[0]?.message?.content || "{}";
+    const result = JSON.parse(resultText);
+
+    if (
+      result &&
+      typeof result.remember === "boolean" &&
+      Array.isArray(result.facts)
+    ) {
+      return {
+        remember: result.remember,
+        facts: result.facts
+          .map((f: Record<string, unknown>) => ({
+            type: (typeof f.type === "string" ? f.type : "personal") as MemoryFact["type"],
+            value: f.value && typeof f.value === "string" ? cleanFact(f.value) : "",
+          }))
+          .filter((f: { type: MemoryFact["type"]; value: string }) => f.value !== ""),
+      };
+    }
+
+    return { remember: false, facts: [] };
+  } catch (error) {
+    console.error("AI Memory Extraction Error:", error);
+    return { remember: false, facts: [] };
+  }
 }

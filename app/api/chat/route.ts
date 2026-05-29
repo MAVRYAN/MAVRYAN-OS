@@ -3,11 +3,13 @@ import { NextResponse } from "next/server";
 
 import {
   extractMemory,
+  extractMemoryWithAI,
   loadMemory,
   saveMemory,
   getMemoryValues,
   addMemoryValue,
   updateMemoryMention,
+  MemoryFact,
 } from "@/lib/memory";
 
 const groq = new Groq({
@@ -68,8 +70,18 @@ export async function POST(req: Request) {
 
     const memory = await loadMemory();
 
-    const newFacts =
-      extractMemory(lastMessage);
+    const aiExtraction = await extractMemoryWithAI(lastMessage);
+
+    let newFacts: { type: MemoryFact["type"]; value: string }[] = [];
+
+    if (aiExtraction.remember && aiExtraction.facts.length > 0) {
+      newFacts = aiExtraction.facts;
+    } else {
+      newFacts = extractMemory(lastMessage).map((f) => ({
+        type: "personal",
+        value: f,
+      }));
+    }
 
     const currentValues = getMemoryValues(memory);
 
@@ -79,18 +91,19 @@ export async function POST(req: Request) {
       )
     );
 
-    for (const fact of newFacts) {
+    for (const factObj of newFacts) {
+      const factValue = factObj.value;
       if (
         !existingFacts.has(
-          fact.toLowerCase()
+          factValue.toLowerCase()
         )
       ) {
-        addMemoryValue(memory, fact);
+        addMemoryValue(memory, factValue, factObj.type);
         existingFacts.add(
-          fact.toLowerCase()
+          factValue.toLowerCase()
         );
       } else {
-        updateMemoryMention(memory, fact);
+        updateMemoryMention(memory, factValue);
       }
     }
 
