@@ -5,6 +5,9 @@ import {
   extractMemory,
   loadMemory,
   saveMemory,
+  getMemoryValues,
+  addMemoryValue,
+  updateMemoryMention,
 } from "@/lib/memory";
 
 const groq = new Groq({
@@ -68,8 +71,10 @@ export async function POST(req: Request) {
     const newFacts =
       extractMemory(lastMessage);
 
+    const currentValues = getMemoryValues(memory);
+
     const existingFacts = new Set(
-      memory.facts.map((fact) =>
+      currentValues.map((fact) =>
         fact.toLowerCase()
       )
     );
@@ -80,18 +85,21 @@ export async function POST(req: Request) {
           fact.toLowerCase()
         )
       ) {
-        memory.facts.push(fact);
+        addMemoryValue(memory, fact);
         existingFacts.add(
           fact.toLowerCase()
         );
+      } else {
+        updateMemoryMention(memory, fact);
       }
     }
 
     await saveMemory(memory);
 
+    const updatedValues = getMemoryValues(memory);
     const memoryPrompt =
-      memory.facts.length > 0
-        ? `Known user facts:\n${memory.facts
+      updatedValues.length > 0
+        ? `Known user facts:\n${updatedValues
             .map((fact) => `- ${fact}`)
             .join("\n")}`
         : "Known user facts:\n- None yet.";

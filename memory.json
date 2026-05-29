@@ -1,9 +1,39 @@
 {
   "facts": [
-    "My name is Aaryan",
-    "I like React",
-    "i like tell me",
-    "I love React",
-    "i like fast and furious movie"
+    {
+      "id": "1a102488-76ed-4669-bceb-b950daa060ae",
+      "type": "personal",
+      "value": "My name is Aaryan",
+      "createdAt": 1780096137027,
+      "lastMentionedAt": 1780096137027
+    },
+    {
+      "id": "b0752236-5f9d-4ef9-b9a8-bacd653755b4",
+      "type": "personal",
+      "value": "I like React",
+      "createdAt": 1780096137027,
+      "lastMentionedAt": 1780096137027
+    },
+    {
+      "id": "22eaa4c1-0011-4611-9570-d968a238b0e6",
+      "type": "personal",
+      "value": "i like tell me",
+      "createdAt": 1780096137027,
+      "lastMentionedAt": 1780096137027
+    },
+    {
+      "id": "da8160ba-99e9-45b8-9acf-82dbd1c565e6",
+      "type": "personal",
+      "value": "I love React",
+      "createdAt": 1780096137027,
+      "lastMentionedAt": 1780096137027
+    },
+    {
+      "id": "4bc99c6d-7172-4183-93f0-d339dcdd0238",
+      "type": "personal",
+      "value": "i like fast and furious movie",
+      "createdAt": 1780096137027,
+      "lastMentionedAt": 1780096137027
+    }
   ]
 }
