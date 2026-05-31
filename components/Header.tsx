@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 
 type HeaderProps = {
   onOpenSidebar?: () => void;
@@ -17,16 +17,7 @@ export default function Header({ onOpenSidebar }: HeaderProps = {}) {
           <Menu size={20} />
         </button>
       )}
-      <div className="flex items-center gap-2 md:gap-3">
-        <Sparkles
-          size={18}
-          className="text-white/80"
-        />
-
-        <h1 className="font-semibold text-lg">
-          MAVRYAN AI
-        </h1>
-      </div>
+      <div />
     </header>
   );
 }

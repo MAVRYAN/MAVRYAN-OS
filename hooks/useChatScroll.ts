@@ -48,8 +48,7 @@ export function useChatScroll(
     useCallback(
       (smooth = true) => {
         if (
-          chatRef.current &&
-          isNearBottom
+          chatRef.current
         ) {
           chatRef.current.scrollTo({
             top:

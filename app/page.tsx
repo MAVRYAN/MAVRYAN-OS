@@ -7,7 +7,10 @@ import {
   useState,
 } from "react";
 
-import { Bot } from "lucide-react";
+import {
+  Bot,
+  ArrowDown,
+} from "lucide-react";
 
 import ChatInput from "@/components/ChatInput";
 import EmptyState from "@/components/EmptyState";
@@ -16,6 +19,7 @@ import MessageBubble from "@/components/MessageBubble";
 import Sidebar from "@/components/Sidebar";
 import SettingsModal from "@/components/SettingsModal";
 import CommandPalette from "@/components/CommandPalette";
+import SearchView from "@/components/SearchView";
 
 import {
   getNextHeadline,
@@ -87,6 +91,12 @@ export default function Home() {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  const [activeView, setActiveView] =
+    useState<"chat" | "search">("chat");
+
+  const [isSidebarCollapsed, setIsSidebarCollapsed] =
+    useState(false);
+
   const chatRef = useRef<HTMLDivElement>(null);
 
   const textareaRef =
@@ -127,21 +137,28 @@ export default function Home() {
     const savedName = getUserName();
     if (savedName) setUserName(savedName);
 
-    let currentTransient = transientHeadline;
-    if (!currentTransient) {
-      currentTransient = getPersonalizedHeadline(savedName);
-      setTransientHeadline(currentTransient);
+    if (!transientHeadline) {
+      setTransientHeadline(
+        getPersonalizedHeadline(savedName)
+      );
     }
+
 
     const parsed =
       getConversations();
 
     if (parsed.length > 0) {
-      setConversations(parsed);
       const migrated = parsed.map((c) => {
         if (!c.headline || c.headline === "Ready to build something?") {
-          return { ...c, headline: getNextHeadline(currentTransient, savedName) };
+          return {
+            ...c,
+            headline: getNextHeadline(
+              transientHeadline,
+              savedName
+            ),
+          };
         }
+
         return c;
       });
 
@@ -614,6 +631,10 @@ export default function Home() {
         onOpenSettings={() => setIsSettingsOpen(true)}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
+        isCollapsed={isSidebarCollapsed}
+        setIsCollapsed={setIsSidebarCollapsed}
+        activeView={activeView}
+        setActiveView={setActiveView}
       />
 
       {/* MAIN */}
@@ -639,16 +660,29 @@ export default function Home() {
 
         <Header onOpenSidebar={() => setIsSidebarOpen(true)} />
 
-        {/* CHAT */}
-
-        <div className={`flex-1 flex flex-col ${messages.length === 0 ? 'justify-center items-center' : ''}`}>
+        {activeView === "search" ? (
+          <SearchView
+            conversations={conversations}
+            setActiveConversationId={
+              setActiveConversationId
+            }
+            setActiveView={
+              setActiveView
+            }
+          />
+        ) : (
+        <div className={`flex-1 min-h-0 flex flex-col ${messages.length === 0 ? 'justify-center items-center' : ''}`}>
           <div
             ref={chatRef}
             className={`w-full ${messages.length === 0 ? 'flex-none pb-6' : 'flex-1 overflow-y-auto'}`}
           >
             {messages.length === 0 ? (
-              <EmptyState headline={activeConversation?.headline || transientHeadline} />
-          ) : (
+              activeConversation?.headline || transientHeadline ? (
+                <EmptyState
+                  headline={activeConversation?.headline || transientHeadline}
+                />
+              ) : null
+            ) : (
             <div className="max-w-4xl mx-auto px-6 py-10 space-y-10">
                 {messages.map(
                   (message, index) => (
@@ -688,6 +722,16 @@ export default function Home() {
             )}
           </div>
 
+
+          {!isNearBottom && messages.length > 0 && (
+            <button
+              onClick={() => scrollToBottom(true)}
+              className="absolute bottom-32 left-1/2 -translate-x-1/2 z-40 h-11 w-11 rounded-full bg-[#1f2023]/90 backdrop-blur-md border border-white/10 text-white shadow-2xl flex items-center justify-center hover:scale-110 hover:bg-[#2a2c30] transition-all duration-200"
+            >
+              <ArrowDown size={18} />
+            </button>
+          )}
+
           {/* INPUT */}
 
           <div className={`w-full ${messages.length === 0 ? '[&>div]:!border-transparent [&>div]:!bg-transparent' : ''}`}>
@@ -702,6 +746,7 @@ export default function Home() {
             />
           </div>
         </div>
+        )}
       </section>
 
       <SettingsModal
