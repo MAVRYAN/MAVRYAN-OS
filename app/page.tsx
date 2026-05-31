@@ -27,8 +27,16 @@ import type {
   Conversation,
 } from "@/types/chat";
 import { extractResponseText } from "@/lib/chat/extractResponseText";
+import {
+  getUserName,
+  getConversations,
+  saveConversations,
+  getTheme,
+  saveTheme,
+} from "@/lib/storage";
 import { streamResponse } from "@/lib/chat/streamResponse";
 import { sendChatRequest } from "@/lib/chat/sendChatRequest";
+import { useChatScroll } from "@/hooks/useChatScroll";
 
 
 
@@ -41,7 +49,7 @@ export default function Home() {
 
   const [userName, setUserName] = useState<string | undefined>(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("mavryan-user-name") || undefined;
+      return getUserName();
     }
     return undefined;
   });
@@ -52,8 +60,6 @@ export default function Home() {
   const [copiedIndex, setCopiedIndex] =
     useState<number | null>(null);
 
-  const [isNearBottom, setIsNearBottom] =
-    useState(true);
 
   const [conversations, setConversations] =
     useState<Conversation[]>([]);
@@ -103,6 +109,14 @@ export default function Home() {
   const messages =
     activeConversation?.messages || [];
 
+  const {
+    isNearBottom,
+    scrollToBottom,
+  } = useChatScroll(
+    chatRef,
+    messages
+  );
+
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
@@ -110,7 +124,7 @@ export default function Home() {
   // LOAD STORAGE
 
   useEffect(() => {
-    const savedName = localStorage.getItem("mavryan-user-name") || undefined;
+    const savedName = getUserName();
     if (savedName) setUserName(savedName);
 
     let currentTransient = transientHeadline;
@@ -119,13 +133,10 @@ export default function Home() {
       setTransientHeadline(currentTransient);
     }
 
-    const saved =
-      localStorage.getItem(
-        "mavryan-conversations"
-      );
+    const parsed =
+      getConversations();
 
-    if (saved) {
-      const parsed = JSON.parse(saved) as Conversation[];
+    if (parsed.length > 0) {
       setConversations(parsed);
       const migrated = parsed.map((c) => {
         if (!c.headline || c.headline === "Ready to build something?") {
@@ -138,9 +149,7 @@ export default function Home() {
     }
 
     const savedTheme =
-      localStorage.getItem(
-        "mavryan-theme"
-      ) as "dark" | "light";
+      getTheme();
 
     if (savedTheme) {
       setTheme(savedTheme);
@@ -151,17 +160,13 @@ export default function Home() {
   // SAVE STORAGE
 
   useEffect(() => {
-    localStorage.setItem(
-      "mavryan-conversations",
-      JSON.stringify(conversations)
+    saveConversations(
+      conversations
     );
   }, [conversations]);
 
   useEffect(() => {
-    localStorage.setItem(
-      "mavryan-theme",
-      theme
-    );
+    saveTheme(theme);
   }, [theme]);
 
   // AUTO FOCUS RENAME
@@ -189,79 +194,7 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // SMART SCROLL
 
-  useEffect(() => {
-    const container = chatRef.current;
-
-    if (!container) return;
-
-    const handleScroll = () => {
-      const threshold = 150;
-
-      const distanceFromBottom =
-        container.scrollHeight -
-        container.scrollTop -
-        container.clientHeight;
-
-      setIsNearBottom(
-        distanceFromBottom < threshold
-      );
-    };
-
-    handleScroll();
-
-    container.addEventListener(
-      "scroll",
-      handleScroll
-    );
-
-    return () => {
-      container.removeEventListener(
-        "scroll",
-        handleScroll
-      );
-    };
-  }, []);
-
-  const scrollToBottom = (
-    smooth = true
-  ) => {
-    if (
-      chatRef.current &&
-      isNearBottom
-    ) {
-      chatRef.current.scrollTo({
-        top:
-          chatRef.current.scrollHeight,
-        behavior: smooth
-          ? "smooth"
-          : "auto",
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (
-      !chatRef.current ||
-      !isNearBottom
-    ) {
-      return;
-    }
-
-    const animationFrame =
-      requestAnimationFrame(() => {
-        chatRef.current?.scrollTo({
-          top:
-            chatRef.current.scrollHeight,
-          behavior: "auto",
-        });
-      });
-
-    return () => {
-      cancelAnimationFrame(animationFrame);
-    };
-  }, [messages, isNearBottom]);
 
   function createNewChat() {
     const newChat: Conversation = {
