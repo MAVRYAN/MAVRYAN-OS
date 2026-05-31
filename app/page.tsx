@@ -27,6 +27,8 @@ import type {
   Conversation,
 } from "@/types/chat";
 import { extractResponseText } from "@/lib/chat/extractResponseText";
+import { streamResponse } from "@/lib/chat/streamResponse";
+import { sendChatRequest } from "@/lib/chat/sendChatRequest";
 
 
 
@@ -416,31 +418,23 @@ export default function Home() {
     }, 100);
 
     try {
-      const response = await fetch(
-        "/api/chat",
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify({
-            messages: (regenerateIndex === undefined
-              ? updatedMessages
-              : updatedMessages.slice(0, regenerateIndex)
-            ).map((msg) => ({
-              role: msg.role,
-              content: msg.content.replace("▋", ""),
-            })),
-            webSearch,
-          }),
-        }
-      );
-
       const data =
-        await response.json();
+        await sendChatRequest(
+          (regenerateIndex === undefined
+            ? updatedMessages
+            : updatedMessages.slice(
+                0,
+                regenerateIndex
+              )
+          ).map((msg) => ({
+            role: msg.role,
+            content: msg.content.replace(
+              "▋",
+              ""
+            ),
+          })),
+          webSearch
+        );
 
       const aiText =
         extractResponseText(data);
@@ -462,52 +456,33 @@ export default function Home() {
         updateMessages(newMsgs, currentConversationId);
       }
 
-      const chunkSize = 16;
+      await streamResponse(
+        aiText,
+        (currentText, isComplete) => {
+          const streamedMessage: Message = {
+            role: "assistant",
+            content:
+              currentText +
+              (isComplete ? "" : "▋"),
+            sources: data.sources,
+          };
 
-      for (
-        let i = chunkSize;
-        i <= aiText.length + chunkSize;
-        i += chunkSize
-      ) {
-        const nextIndex = Math.min(
-          i,
-          aiText.length
-        );
-
-        const currentText =
-          aiText.slice(0, nextIndex);
-
-        const streamedMessage: Message = {
-          role: "assistant",
-          content:
-            currentText +
-            (nextIndex < aiText.length
-              ? "▋"
-              : ""),
-          sources: data.sources,
-        };
-
-        if (regenerateIndex === undefined) {
-          updateMessages([
-            ...updatedMessages,
-            streamedMessage,
-          ], currentConversationId);
-        } else {
-          const newMsgs = [...updatedMessages];
-          newMsgs[regenerateIndex] = streamedMessage;
-          updateMessages(newMsgs, currentConversationId);
+          if (regenerateIndex === undefined) {
+            updateMessages([
+              ...updatedMessages,
+              streamedMessage,
+            ], currentConversationId);
+          } else {
+            const newMsgs = [...updatedMessages];
+            newMsgs[regenerateIndex] =
+              streamedMessage;
+            updateMessages(
+              newMsgs,
+              currentConversationId
+            );
+          }
         }
-
-        if (nextIndex < aiText.length) {
-          await new Promise<void>(
-            (resolve) => {
-              requestAnimationFrame(() =>
-                resolve()
-              );
-            }
-          );
-        }
-      }
+      );
     } catch (error) {
       updateMessages([
         ...updatedMessages,
