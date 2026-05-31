@@ -5,7 +5,7 @@
       "type": "personal",
       "value": "My name is Aaryan",
       "createdAt": 1780096137027,
-      "lastMentionedAt": 1780096137027
+      "lastMentionedAt": 1780182724927
     },
     {
       "id": "b0752236-5f9d-4ef9-b9a8-bacd653755b4",
@@ -48,6 +48,90 @@
       "value": "Clash Royale",
       "createdAt": 1780098841722,
       "lastMentionedAt": 1780098841722
+    },
+    {
+      "id": "dc22eb51-e439-445d-801b-e919f969a512",
+      "type": "technology",
+      "value": "Pascal is a programming language developed by Niklaus Wirth in 1970",
+      "createdAt": 1780181366514,
+      "lastMentionedAt": 1780181366514
+    },
+    {
+      "id": "3418211e-5e82-4312-9cc6-2212dab6a762",
+      "type": "education",
+      "value": "Pascal is often taught in introductory programming courses, especially in high school and early college education",
+      "createdAt": 1780181366514,
+      "lastMentionedAt": 1780181366514
+    },
+    {
+      "id": "58b61cca-b4b7-4030-ba85-413641f35130",
+      "type": "skill",
+      "value": "Proficiency in Pascal is a valuable skill for software developers, especially those working in legacy system maintenance or education",
+      "createdAt": 1780181366514,
+      "lastMentionedAt": 1780181366514
+    },
+    {
+      "id": "35d0b2c7-be32-4e3f-9b1a-1aaae8295d3a",
+      "type": "personal",
+      "value": "I am a memory extraction system",
+      "createdAt": 1780192916187,
+      "lastMentionedAt": 1780192916187
+    },
+    {
+      "id": "75994984-1778-4d70-ae22-cc6e750162fc",
+      "type": "technology",
+      "value": "ChatGPT and Gemini are AI chatbots",
+      "createdAt": 1780192928856,
+      "lastMentionedAt": 1780192928856
+    },
+    {
+      "id": "513101fb-7266-429d-97eb-88362832f04d",
+      "type": "technology",
+      "value": "ChatGPT is a large language model developed by OpenAI",
+      "createdAt": 1780192928856,
+      "lastMentionedAt": 1780192928856
+    },
+    {
+      "id": "a3db732b-5bb4-42ab-8192-3dc012669d8d",
+      "type": "technology",
+      "value": "Gemini is a large language model developed by Google",
+      "createdAt": 1780192928856,
+      "lastMentionedAt": 1780192928856
+    },
+    {
+      "id": "db951272-ac6e-41c9-a2f4-42ad7bd5f82f",
+      "type": "skill",
+      "value": "natural language processing",
+      "createdAt": 1780192928856,
+      "lastMentionedAt": 1780192928856
+    },
+    {
+      "id": "efe579a3-9254-4b95-931a-5de80710b144",
+      "type": "skill",
+      "value": "machine learning",
+      "createdAt": 1780192928856,
+      "lastMentionedAt": 1780192928856
+    },
+    {
+      "id": "7f4d3b42-99c8-4b3e-b14e-3f75321c67cc",
+      "type": "career_goal",
+      "value": "improving conversational AI",
+      "createdAt": 1780192928856,
+      "lastMentionedAt": 1780192928856
+    },
+    {
+      "id": "d416e951-409d-4dc5-b331-3b3a1d15a602",
+      "type": "project",
+      "value": "Tic Tac Game",
+      "createdAt": 1780236984344,
+      "lastMentionedAt": 1780236984344
+    },
+    {
+      "id": "dd50be60-5d48-4aea-b071-a2adc82d4ec0",
+      "type": "technology",
+      "value": "Python",
+      "createdAt": 1780236984344,
+      "lastMentionedAt": 1780236984344
     }
   ]
 }

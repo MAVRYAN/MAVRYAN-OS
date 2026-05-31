@@ -115,7 +115,7 @@ export default function Sidebar({
         onClick={onClose}
       />
 
-      <aside className={`fixed inset-y-0 left-0 z-50 w-[280px] border-r border-white/5 bg-[#080808] flex flex-col transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:z-auto ${
+      <aside className={`fixed inset-y-0 left-0 z-50 w-[280px] border-r border-white/5 bg-[#1e1f22] flex flex-col transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:z-auto ${
         isOpen ? "translate-x-0" : "-translate-x-full"
       }`}>
       <div className="p-4 flex items-center justify-between">
@@ -181,11 +181,11 @@ export default function Sidebar({
           sortedConversations.map((conversation) => (
             <div
               key={conversation.id}
-              className={`group flex items-center justify-between rounded-xl px-3 py-3 cursor-pointer transition-all duration-300 ease-out ${
+              className={`group flex items-center justify-between rounded-xl px-3 py-3 cursor-pointer transition-colors duration-300 ease-out ${
                 activeConversationId ===
                 conversation.id
-                  ? "bg-white/10 border border-white/5 shadow-[0_2px_10px_rgba(0,0,0,0.3)]"
-                  : "border border-transparent hover:bg-white/[0.04] hover:-translate-y-[1px] hover:shadow-[0_2px_10px_rgba(0,0,0,0.2)]"
+                  ? "bg-[#282a2c] text-white font-medium"
+                  : "text-gray-400 hover:bg-[#282a2c]/50"
               }`}
               onClick={() => {
                 setActiveConversationId(conversation.id);

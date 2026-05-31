@@ -17,65 +17,35 @@ import Sidebar from "@/components/Sidebar";
 import SettingsModal from "@/components/SettingsModal";
 import CommandPalette from "@/components/CommandPalette";
 
-type Message = {
-  role: "user" | "assistant";
-  content: string;
-  sources?: {
-    title: string;
-    url: string;
-    domain: string;
-  }[];
-};
+import {
+  getNextHeadline,
+  getPersonalizedHeadline,
+} from "@/utils/headlineGenerator";
+import { generateSmartTitle } from "@/utils/smartTitle";
+import type {
+  Message,
+  Conversation,
+} from "@/types/chat";
+import { extractResponseText } from "@/lib/chat/extractResponseText";
 
-type Conversation = {
-  id: string;
-  title: string;
-  messages: Message[];
-  pinned?: boolean;
-};
 
-const suggestions = [
-  "Build a futuristic portfolio website",
-  "Explain quantum physics simply",
-  "Create a React dashboard UI",
-  "Write an AI startup pitch",
-];
 
-function generateSmartTitle(text: string): string {
-  let cleanText = text.trim();
 
-  const fillers = [
-    /^how do i /i, /^how to /i, /^what is /i, /^what are /i,
-    /^tell me about /i, /^tell me /i, /^can you /i, /^could you /i,
-    /^write a /i, /^write /i, /^create a /i, /^create /i,
-    /^help me with /i, /^help me /i, /^explain /i, /^please /i,
-    /^show me /i, /^give me /i, /^i need /i
-  ];
-
-  for (const filler of fillers) {
-    cleanText = cleanText.replace(filler, "");
-  }
-
-  cleanText = cleanText.replace(/[?!.,;:_]+$/, "").trim();
-
-  if (cleanText.length > 35) {
-    const truncated = cleanText.substring(0, 35);
-    const lastSpace = truncated.lastIndexOf(" ");
-    cleanText = lastSpace > 10 ? truncated.substring(0, lastSpace) : truncated;
-  }
-
-  const title = cleanText
-    .split(/\s+/)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
-
-  return title || "New Chat";
-}
 
 export default function Home() {
   const [input, setInput] = useState("");
 
   const [loading, setLoading] = useState(false);
+
+  const [userName, setUserName] = useState<string | undefined>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("mavryan-user-name") || undefined;
+    }
+    return undefined;
+  });
+
+  const [transientHeadline, setTransientHeadline] =
+    useState<string>("");
 
   const [copiedIndex, setCopiedIndex] =
     useState<number | null>(null);
@@ -138,16 +108,31 @@ export default function Home() {
   // LOAD STORAGE
 
   useEffect(() => {
+    const savedName = localStorage.getItem("mavryan-user-name") || undefined;
+    if (savedName) setUserName(savedName);
+
+    let currentTransient = transientHeadline;
+    if (!currentTransient) {
+      currentTransient = getPersonalizedHeadline(savedName);
+      setTransientHeadline(currentTransient);
+    }
+
     const saved =
       localStorage.getItem(
         "mavryan-conversations"
       );
 
     if (saved) {
-      const parsed =
-        JSON.parse(saved);
-
+      const parsed = JSON.parse(saved) as Conversation[];
       setConversations(parsed);
+      const migrated = parsed.map((c) => {
+        if (!c.headline || c.headline === "Ready to build something?") {
+          return { ...c, headline: getNextHeadline(currentTransient, savedName) };
+        }
+        return c;
+      });
+
+      setConversations(migrated);
     }
 
     const savedTheme =
@@ -159,7 +144,6 @@ export default function Home() {
       setTheme(savedTheme);
     }
 
-    setActiveConversationId("");
   }, []);
 
   // SAVE STORAGE
@@ -282,6 +266,7 @@ export default function Home() {
       id: Date.now().toString(),
       title: "New Chat",
       messages: [],
+      headline: getNextHeadline(activeConversation?.headline || transientHeadline, userName),
     };
 
     setConversations((prev) => [
@@ -310,6 +295,7 @@ export default function Home() {
                 ? generateSmartTitle(updatedMessages[0].content)
                 : "New Chat",
             messages: updatedMessages,
+              headline: transientHeadline || getNextHeadline(undefined, userName),
           },
           ...prev,
         ];
@@ -380,10 +366,12 @@ export default function Home() {
     if (!finalMessage.trim()) return;
 
     let currentConversationId = activeConversationId;
+    let isNewChat = false;
 
     if (!currentConversationId) {
       currentConversationId = Date.now().toString();
       setActiveConversationId(currentConversationId);
+      isNewChat = true;
     }
 
     const updatedMessages = [...messagesRef.current];
@@ -406,6 +394,9 @@ export default function Home() {
       if (textareaRef.current) {
         textareaRef.current.style.height =
           "auto";
+      }
+      if (isNewChat) {
+        setTransientHeadline(getNextHeadline(transientHeadline, userName));
       }
     } else {
       updatedMessages[regenerateIndex] = {
@@ -451,21 +442,8 @@ export default function Home() {
       const data =
         await response.json();
 
-      let aiText = "";
-
-      if (typeof data === "string") {
-        aiText = data;
-      } else if (data.content) {
-        aiText = data.content;
-      } else if (data.message) {
-        aiText = data.message;
-      } else {
-        aiText = JSON.stringify(
-          data,
-          null,
-          2
-        );
-      }
+      const aiText =
+        extractResponseText(data);
 
       const assistantMessage: Message = {
         role: "assistant",
@@ -652,6 +630,7 @@ export default function Home() {
   function clearAllChats() {
     setConversations([]);
     setActiveConversationId("");
+    setTransientHeadline(getNextHeadline(transientHeadline, userName));
   }
 
   function togglePin(id: string) {
@@ -697,7 +676,7 @@ export default function Home() {
   }
 
   return (
-    <main className={`flex h-[100dvh] bg-[#0a0a0a] text-white overflow-hidden ${theme === "light" ? "invert hue-rotate-180" : ""}`}>
+    <main className={`flex h-[100dvh] bg-[#131314] text-white overflow-hidden ${theme === "light" ? "invert hue-rotate-180" : ""}`}>
       {/* SIDEBAR */}
 
       <Sidebar
@@ -731,20 +710,36 @@ export default function Home() {
 
       {/* MAIN */}
 
-      <section className="flex-1 flex flex-col relative">
+      <section className="flex-1 flex flex-col relative z-0">
+        <style>{`
+          @keyframes ambient-glow {
+            0%, 100% { opacity: 0.20; transform: scale(1); }
+            50% { opacity: 0.40; transform: scale(1.05); }
+          }
+          .animate-ambient-glow {
+            animation: ambient-glow 18s ease-in-out infinite;
+          }
+        `}</style>
+
+        {/* AMBIENT GLOW */}
+        <div className="absolute top-[15vh] md:top-[25vh] left-1/2 -translate-x-1/2 w-[100vw] max-w-[1200px] h-[400px] md:h-[500px] pointer-events-none -z-10 flex justify-center">
+          <div 
+            className="w-full h-full blur-[100px] md:blur-[150px] rounded-full animate-ambient-glow"
+            style={{ background: "radial-gradient(circle at 50% 50%, rgba(196,113,237,0.45) 0%, rgba(91,134,229,0.35) 35%, rgba(255,95,109,0.25) 70%, transparent 100%)" }}
+          />
+        </div>
+
         <Header onOpenSidebar={() => setIsSidebarOpen(true)} />
 
         {/* CHAT */}
 
-        <div
-          ref={chatRef}
-          className="flex-1 overflow-y-auto"
-        >
-          {messages.length === 0 ? (
-            <EmptyState
-              suggestions={suggestions}
-              sendMessage={sendMessage}
-            />
+        <div className={`flex-1 flex flex-col ${messages.length === 0 ? 'justify-center items-center' : ''}`}>
+          <div
+            ref={chatRef}
+            className={`w-full ${messages.length === 0 ? 'flex-none pb-6' : 'flex-1 overflow-y-auto'}`}
+          >
+            {messages.length === 0 ? (
+              <EmptyState headline={activeConversation?.headline || transientHeadline} />
           ) : (
             <div className="max-w-4xl mx-auto px-6 py-10 space-y-10">
                 {messages.map(
@@ -781,21 +776,24 @@ export default function Home() {
                     </div>
                   </div>
                 )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
+
+          {/* INPUT */}
+
+          <div className={`w-full ${messages.length === 0 ? '[&>div]:!border-transparent [&>div]:!bg-transparent' : ''}`}>
+            <ChatInput
+              input={input}
+              setInput={setInput}
+              sendMessage={sendMessage}
+              loading={loading}
+              textareaRef={textareaRef}
+              webSearch={webSearch}
+              setWebSearch={setWebSearch}
+            />
+          </div>
         </div>
-
-        {/* INPUT */}
-
-        <ChatInput
-          input={input}
-          setInput={setInput}
-          sendMessage={sendMessage}
-          loading={loading}
-          textareaRef={textareaRef}
-          webSearch={webSearch}
-          setWebSearch={setWebSearch}
-        />
       </section>
 
       <SettingsModal
