@@ -132,6 +132,41 @@
       "value": "Python",
       "createdAt": 1780236984344,
       "lastMentionedAt": 1780256716698
+    },
+    {
+      "id": "0e7c9cc9-b9e9-41b6-88ca-3a22ebd0f1fc",
+      "type": "technology",
+      "value": "Tailwind",
+      "createdAt": 1780688222402,
+      "lastMentionedAt": 1780688222402
+    },
+    {
+      "id": "68efbc79-89fd-4c83-b420-60c194f660ff",
+      "type": "technology",
+      "value": "Framer Motion",
+      "createdAt": 1780688222402,
+      "lastMentionedAt": 1780688222402
+    },
+    {
+      "id": "0c5ef402-853b-418b-bc38-04e3fea5b582",
+      "type": "technology",
+      "value": "Lucide React",
+      "createdAt": 1780688222402,
+      "lastMentionedAt": 1780688222402
+    },
+    {
+      "id": "f34b29ce-0ffe-407e-991d-6a3be814c75c",
+      "type": "project",
+      "value": "System Dashboard component",
+      "createdAt": 1780688222402,
+      "lastMentionedAt": 1780688222402
+    },
+    {
+      "id": "9e1b3ff9-ef29-4a53-bfae-4a058ef174b2",
+      "type": "personal",
+      "value": "AI OS",
+      "createdAt": 1780688222402,
+      "lastMentionedAt": 1780688222402
     }
   ]
 }
