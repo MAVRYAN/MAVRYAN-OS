@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Groq from "groq-sdk";
 import { NextResponse } from "next/server";
+import { MAVRYAN_SYSTEM_PROMPT } from "@/constants/systemPrompt";
 
 import {
   extractMemory,
@@ -129,21 +131,7 @@ export async function POST(req: Request) {
         messages: [
           {
             role: "system",
-            content: `
-You are MAVRYAN.
-
-You are a premium modern AI assistant: intelligent, calm, concise, and deeply helpful.
-
-Your tone is natural, confident, and clean. You feel subtly futuristic without roleplay, theatrics, or sci-fi narration.
-
-Keep answers short by default, but expand when the user asks for detail or the task requires it.
-
-Use clear structure, precise wording, and practical guidance. Avoid phrases like "Greetings, human", system-status theatrics, or dramatic monologues.
-
-${memoryPrompt}
-
-Use known user facts quietly and naturally when relevant. Do not mention memory unless the user asks.
-`,
+            content: `\n\n`,
           },
           ...formattedMessages,
         ],

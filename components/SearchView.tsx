@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -6,6 +7,7 @@ import { Search, X } from "lucide-react";
 type Conversation = {
   id: string;
   title: string;
+  messages?: any[];
 };
 
 type SearchViewProps = {
@@ -31,18 +33,14 @@ export default function SearchView({
     inputRef.current?.focus();
   }, []);
 
-  const filteredChats =
-    conversations.filter((chat) =>
-      chat.title
-        .toLowerCase()
-        .includes(
-          searchQuery.toLowerCase()
-        )
-    );
+  const filteredChats = conversations.filter((chat) =>
+    chat.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+    (chat.messages ? chat.messages.length > 0 : true)
+  );
 
   return (
-    <div className="flex-1 overflow-y-auto">
-      <div className="max-w-6xl mx-auto px-8 py-6">
+    <div className="flex-1 overflow-y-auto" onClick={() => setActiveView("chat")}>
+      <div className="max-w-3xl mx-auto px-8 py-6" onClick={(e) => e.stopPropagation()}>
 
         <div className="relative mb-8">
           <Search
@@ -59,7 +57,7 @@ export default function SearchView({
               )
             }
             placeholder="Search chats"
-            className="w-full bg-[#1f2023] border border-white/10 rounded-2xl py-4 pl-12 pr-12 outline-none focus:border-white/20 focus:bg-[#232427] transition-all"
+            className="w-full bg-transparent border border-white/5 rounded-full py-3.5 pl-12 pr-12 outline-none focus:border-white/10 focus:bg-transparent transition-all"
           />
 
           {searchQuery && (
@@ -87,7 +85,7 @@ export default function SearchView({
                   setActiveConversationId(chat.id);
                   setActiveView("chat");
                 }}
-                className="flex items-center justify-between rounded-xl px-4 py-3 hover:bg-white/5 cursor-pointer transition-all duration-200 border border-transparent hover:border-white/5"
+                className="flex items-center justify-between rounded-full px-4 py-2.5 hover:bg-white/3 cursor-pointer transition-all duration-200 border border-transparent hover:border-white/5"
               >
                 <span className="truncate">
                   {chat.title}

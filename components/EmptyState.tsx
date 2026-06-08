@@ -17,12 +17,9 @@ export default function EmptyState({
             to { opacity: 1; transform: translateY(0); }
           }
         `}</style>
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold tracking-tight text-white/90 mb-4">
+        <h1 className="text-3xl md:text-4xl font-medium tracking-tight text-white/90">
           {headline}
         </h1>
-        <p className="text-white/40 text-lg md:text-xl">
-          How can MAVRYAN help you today?
-        </p>
       </div>
     </div>
   );

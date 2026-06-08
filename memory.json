@@ -132,6 +132,118 @@
       "value": "Python",
       "createdAt": 1780236984344,
       "lastMentionedAt": 1780256716698
+    },
+    {
+      "id": "0e7c9cc9-b9e9-41b6-88ca-3a22ebd0f1fc",
+      "type": "technology",
+      "value": "Tailwind",
+      "createdAt": 1780688222402,
+      "lastMentionedAt": 1780688222402
+    },
+    {
+      "id": "68efbc79-89fd-4c83-b420-60c194f660ff",
+      "type": "technology",
+      "value": "Framer Motion",
+      "createdAt": 1780688222402,
+      "lastMentionedAt": 1780688222402
+    },
+    {
+      "id": "0c5ef402-853b-418b-bc38-04e3fea5b582",
+      "type": "technology",
+      "value": "Lucide React",
+      "createdAt": 1780688222402,
+      "lastMentionedAt": 1780688222402
+    },
+    {
+      "id": "f34b29ce-0ffe-407e-991d-6a3be814c75c",
+      "type": "project",
+      "value": "System Dashboard component",
+      "createdAt": 1780688222402,
+      "lastMentionedAt": 1780688222402
+    },
+    {
+      "id": "9e1b3ff9-ef29-4a53-bfae-4a058ef174b2",
+      "type": "personal",
+      "value": "AI OS",
+      "createdAt": 1780688222402,
+      "lastMentionedAt": 1780688222402
+    },
+    {
+      "id": "d1e0af2d-615f-46fb-a0b8-768070b2e3f1",
+      "type": "technology",
+      "value": "Natural Language Processing (NLP), Machine Learning (ML), and Deep Learning (DL)",
+      "createdAt": 1780698372152,
+      "lastMentionedAt": 1780698372152
+    },
+    {
+      "id": "5710da4f-0df6-4785-96c3-de8262cc7114",
+      "type": "skill",
+      "value": "Knowledge Retrieval, Contextual Understanding, and Human-like Conversation",
+      "createdAt": 1780698372152,
+      "lastMentionedAt": 1780698372152
+    },
+    {
+      "id": "5556f03b-68b9-4855-878e-6b7930f3809e",
+      "type": "education",
+      "value": "Self-supervised learning from vast amounts of text data, including books, articles, and online content",
+      "createdAt": 1780698372152,
+      "lastMentionedAt": 1780698372152
+    },
+    {
+      "id": "b47f45fe-7bd6-417a-8744-65a20e5fb466",
+      "type": "career_goal",
+      "value": "Improving conversational AI capabilities to assist humans in various tasks and industries",
+      "createdAt": 1780698372152,
+      "lastMentionedAt": 1780698372152
+    },
+    {
+      "id": "0d5828ea-f022-482b-a54f-6acd9182ade3",
+      "type": "project",
+      "value": "Developing a memory extraction system to analyze user messages and extract long-term facts",
+      "createdAt": 1780698372152,
+      "lastMentionedAt": 1780698372152
+    },
+    {
+      "id": "b14dff3f-30b7-4255-bd16-71756bda9de5",
+      "type": "personal",
+      "value": "Analyzing user preferences, favorite things, skills, technologies used, education, career goals, ongoing projects, long-term interests, and recurring personal context",
+      "createdAt": 1780698372152,
+      "lastMentionedAt": 1780698372152
+    },
+    {
+      "id": "1a65246a-3e97-43f4-a2cd-7cc4831aedb7",
+      "type": "long_term_interest",
+      "value": "Artificial Intelligence vs Human Intelligence",
+      "createdAt": 1780945720006,
+      "lastMentionedAt": 1780945720006
+    },
+    {
+      "id": "6b6bbe34-1279-474b-b1c2-7220006aa776",
+      "type": "career_goal",
+      "value": "Improving AI systems to augment human capabilities",
+      "createdAt": 1780945720006,
+      "lastMentionedAt": 1780945720006
+    },
+    {
+      "id": "e35a84a8-cc68-4de5-aee2-8946f16ff2f8",
+      "type": "technology",
+      "value": "Machine Learning, Deep Learning, Natural Language Processing",
+      "createdAt": 1780945720006,
+      "lastMentionedAt": 1780945720006
+    },
+    {
+      "id": "a1d966f1-5544-4204-9b76-1664a67cfff9",
+      "type": "skill",
+      "value": "Critical thinking, problem-solving, creativity",
+      "createdAt": 1780945720006,
+      "lastMentionedAt": 1780945720006
+    },
+    {
+      "id": "8376d211-f840-4bec-a595-cd8a6f03dae2",
+      "type": "personal",
+      "value": "Belief in the potential of AI to improve human lives",
+      "createdAt": 1780945720006,
+      "lastMentionedAt": 1780945720006
     }
   ]
 }

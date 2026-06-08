@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import {
@@ -10,7 +11,9 @@ import {
 import {
   Bot,
   ArrowDown,
+  X,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 import ChatInput from "@/components/ChatInput";
 import EmptyState from "@/components/EmptyState";
@@ -95,7 +98,13 @@ export default function Home() {
     useState<"chat" | "search">("chat");
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] =
-    useState(false);
+    useState(true);
+
+  const [activeArtifact, setActiveArtifact] = useState<{title: string, content: string} | null>(null);
+
+  useEffect(() => {
+    setActiveArtifact((prev) => prev !== null ? null : prev);
+  }, [activeConversationId]);
 
   const chatRef = useRef<HTMLDivElement>(null);
 
@@ -135,7 +144,7 @@ export default function Home() {
 
   useEffect(() => {
     const savedName = getUserName();
-    if (savedName) setUserName(savedName);
+    if (savedName) setUserName((prev) => prev !== savedName ? savedName : prev);
 
     if (!transientHeadline) {
       setTransientHeadline(
@@ -214,19 +223,10 @@ export default function Home() {
 
 
   function createNewChat() {
-    const newChat: Conversation = {
-      id: Date.now().toString(),
-      title: "New Chat",
-      messages: [],
-      headline: getNextHeadline(activeConversation?.headline || transientHeadline, userName),
-    };
-
-    setConversations((prev) => [
-      newChat,
-      ...prev,
-    ]);
-
-    setActiveConversationId(newChat.id);
+    setActiveConversationId("");
+    setActiveView("chat");
+    setTransientHeadline(getNextHeadline(activeConversation?.headline || transientHeadline, userName));
+    setTimeout(() => textareaRef.current?.focus(), 10);
   }
 
   function updateMessages(
@@ -447,7 +447,7 @@ export default function Home() {
     setLoading(false);
   }
 
-  sendMessageRef.current = sendMessage;
+  useEffect(() => { sendMessageRef.current = sendMessage; }, [sendMessage]);
 
   const copyMessage = useCallback(async (
     text: string,
@@ -601,7 +601,7 @@ export default function Home() {
   }
 
   return (
-    <main className={`flex h-[100dvh] bg-[#131314] text-white overflow-hidden ${theme === "light" ? "invert hue-rotate-180" : ""}`}>
+    <main className={`flex h-[100dvh] bg-[#0a0a0a] text-white overflow-hidden ${theme === "light" ? "invert hue-rotate-180" : ""}`}>
       {/* SIDEBAR */}
 
       <Sidebar
@@ -639,7 +639,8 @@ export default function Home() {
 
       {/* MAIN */}
 
-      <section className="flex-1 flex flex-col relative z-0">
+      <div className="flex-1 flex overflow-hidden relative z-0">
+        <section className={`flex flex-col relative z-0 transition-all duration-300 ease-in-out ${activeArtifact ? "hidden lg:flex lg:w-1/2 border-r border-white/5" : "w-full"}`}>
         <style>{`
           @keyframes ambient-glow {
             0%, 100% { opacity: 0.20; transform: scale(1); }
@@ -695,6 +696,7 @@ export default function Home() {
                       deleteMessage={deleteMessage}
                       onEdit={handleEditMessage}
                       onRegenerate={handleRegenerateMessage}
+                      onOpenArtifact={(title, content) => setActiveArtifact({title, content})}
                     />
                   )
                 )}
@@ -743,11 +745,50 @@ export default function Home() {
               textareaRef={textareaRef}
               webSearch={webSearch}
               setWebSearch={setWebSearch}
+              isChatActive={messages.length > 0}
             />
           </div>
         </div>
         )}
       </section>
+
+      {/* WORKSPACE PANEL */}
+      <AnimatePresence>
+        {activeArtifact && (
+          <motion.div
+            initial={{ flex: 0, minWidth: 0, opacity: 0 }}
+            animate={{ flex: 1, minWidth: "300px", opacity: 1 }}
+            exit={{ flex: 0, minWidth: 0, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="w-full lg:w-1/2 bg-[#050505] flex flex-col z-10 shadow-[-10px_0_30px_rgba(0,0,0,0.3)] overflow-hidden"
+          >
+            <div className="h-[60px] flex-none border-b border-white/5 flex items-center justify-between px-4 bg-[#0a0a0a]">
+              <div className="flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-blue-400 animate-pulse"></div>
+                <h3 className="text-[15px] font-medium text-white/90 tracking-wide">{activeArtifact.title || "Workspace"}</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => navigator.clipboard.writeText(activeArtifact.content)}
+                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded-md text-xs font-medium transition-colors"
+                >
+                  Copy Code
+                </button>
+                <button 
+                  onClick={() => setActiveArtifact(null)} 
+                  className="p-1.5 hover:bg-white/10 rounded-md transition-colors text-white/50 hover:text-white cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 bg-[#050505] text-[13px] text-white/80 whitespace-pre-wrap font-mono leading-relaxed select-text">
+              {activeArtifact.content}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      </div>
 
       <SettingsModal
         isOpen={isSettingsOpen}
