@@ -115,9 +115,14 @@ export async function loadMemory(): Promise<Memory> {
   }
 }
 
-export async function saveMemory(
-  memory: Memory
-) {
+export async function saveMemory(memory: Memory) {
+  // If we are running on Vercel, skip the file write to prevent EROFS crash
+  if (process.env.VERCEL || process.env.NODE_ENV === "production") {
+    console.log("Vercel Environment detected: Skipping local file write.");
+    return;
+  }
+
+  // Otherwise, save normally on local machine
   await writeFile(
     memoryFile,
     `${JSON.stringify(
