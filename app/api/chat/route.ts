@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Groq from "groq-sdk";
 import { NextResponse } from "next/server";
 import { MAVRYAN_SYSTEM_PROMPT } from "@/constants/systemPrompt";

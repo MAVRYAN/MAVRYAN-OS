@@ -209,6 +209,41 @@
       "value": "Analyzing user preferences, favorite things, skills, technologies used, education, career goals, ongoing projects, long-term interests, and recurring personal context",
       "createdAt": 1780698372152,
       "lastMentionedAt": 1780698372152
+    },
+    {
+      "id": "1a65246a-3e97-43f4-a2cd-7cc4831aedb7",
+      "type": "long_term_interest",
+      "value": "Artificial Intelligence vs Human Intelligence",
+      "createdAt": 1780945720006,
+      "lastMentionedAt": 1780945720006
+    },
+    {
+      "id": "6b6bbe34-1279-474b-b1c2-7220006aa776",
+      "type": "career_goal",
+      "value": "Improving AI systems to augment human capabilities",
+      "createdAt": 1780945720006,
+      "lastMentionedAt": 1780945720006
+    },
+    {
+      "id": "e35a84a8-cc68-4de5-aee2-8946f16ff2f8",
+      "type": "technology",
+      "value": "Machine Learning, Deep Learning, Natural Language Processing",
+      "createdAt": 1780945720006,
+      "lastMentionedAt": 1780945720006
+    },
+    {
+      "id": "a1d966f1-5544-4204-9b76-1664a67cfff9",
+      "type": "skill",
+      "value": "Critical thinking, problem-solving, creativity",
+      "createdAt": 1780945720006,
+      "lastMentionedAt": 1780945720006
+    },
+    {
+      "id": "8376d211-f840-4bec-a595-cd8a6f03dae2",
+      "type": "personal",
+      "value": "Belief in the potential of AI to improve human lives",
+      "createdAt": 1780945720006,
+      "lastMentionedAt": 1780945720006
     }
   ]
 }

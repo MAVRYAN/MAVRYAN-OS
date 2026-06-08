@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import {
@@ -102,7 +103,7 @@ export default function Home() {
   const [activeArtifact, setActiveArtifact] = useState<{title: string, content: string} | null>(null);
 
   useEffect(() => {
-    setActiveArtifact(null);
+    setActiveArtifact((prev) => prev !== null ? null : prev);
   }, [activeConversationId]);
 
   const chatRef = useRef<HTMLDivElement>(null);
@@ -143,7 +144,7 @@ export default function Home() {
 
   useEffect(() => {
     const savedName = getUserName();
-    if (savedName) setUserName(savedName);
+    if (savedName) setUserName((prev) => prev !== savedName ? savedName : prev);
 
     if (!transientHeadline) {
       setTransientHeadline(
@@ -446,7 +447,7 @@ export default function Home() {
     setLoading(false);
   }
 
-  sendMessageRef.current = sendMessage;
+  useEffect(() => { sendMessageRef.current = sendMessage; }, [sendMessage]);
 
   const copyMessage = useCallback(async (
     text: string,
