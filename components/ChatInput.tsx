@@ -1,12 +1,14 @@
 "use client";
 
-import type {
+import {
   Dispatch,
   RefObject,
   SetStateAction,
+  useRef,
+  ChangeEvent,
 } from "react";
 
-import { Send, Globe } from "lucide-react";
+import { Send, Globe, Paperclip } from "lucide-react";
 
 type ChatInputProps = {
   input: string;
@@ -31,6 +33,16 @@ export default function ChatInput({
   setWebSearch,
   isChatActive,
 }: ChatInputProps) {
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      console.log("File ready for upload:", file.name);
+    }
+  };
+
   return (
     <div className="border-t border-white/5 p-3 md:p-5 bg-[#0a0a0a]">
       <style>{`
